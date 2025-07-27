@@ -4,7 +4,7 @@ This directory contains examples showing how to use the Dapr Actor Code Generato
 
 ## Example OpenAPI Schemas
 
-### `schemas/openapi/multi-actors.yaml`
+### `multi-actors/openapi.yaml`
 
 A complete example showing how to define multiple actor types in a single OpenAPI specification:
 
@@ -23,10 +23,10 @@ Generate code from the example schema:
 
 ```bash
 # Using the generation script
-./tools/scripts/generate.sh openapi examples/schemas/openapi/multi-actors.yaml ./output
+./scripts/generate.sh openapi examples/multi-actors/openapi.yaml ./output
 
 # Or using the binary directly  
-./tools/bin/dapr-actor-gen examples/schemas/openapi/multi-actors.yaml ./output
+./bin/dapr-actor-gen examples/multi-actors/openapi.yaml ./output
 ```
 
 This will create actor packages in the `./output` directory:

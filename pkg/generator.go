@@ -1,4 +1,4 @@
-package main
+package generator
 
 import (
 	"fmt"
@@ -7,39 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
-
-	"github.com/getkin/kin-openapi/openapi3"
 )
-
-func main() {
-	if len(os.Args) < 3 {
-		log.Fatal("Usage: generator <openapi-file> <base-output-dir>")
-	}
-
-	schemaFile := os.Args[1]
-	baseOutputDir := os.Args[2]
-
-	// Load OpenAPI spec
-	loader := openapi3.NewLoader()
-	doc, err := loader.LoadFromFile(schemaFile)
-	if err != nil {
-		log.Fatalf("Failed to load OpenAPI spec: %v", err)
-	}
-
-	// Parse OpenAPI to intermediate model
-	parser := NewOpenAPIParser(doc)
-	model, err := parser.Parse()
-	if err != nil {
-		log.Fatalf("Failed to parse OpenAPI spec: %v", err)
-	}
-
-	// Generate actor-specific packages using the intermediate model
-	generator := &Generator{}
-	err = generator.GenerateActorPackages(model, baseOutputDir)
-	if err != nil {
-		log.Fatalf("Failed to generate actor packages: %v", err)
-	}
-}
 
 // Generator handles code generation from the intermediate model
 type Generator struct{}
@@ -215,30 +183,39 @@ func getTemplatePath(templateName string) string {
 		wd, _ := os.Getwd()
 		templatePath = filepath.Join(wd, "templates", templateName)
 		
-		// If still not found, try relative to the generator source directory
+		// If still not found, try one directory up (for tests in pkg/)
 		if _, err := os.Stat(templatePath); os.IsNotExist(err) {
-			// Try to find the templates directory in the project structure
-			// Walk up from the executable to find api-generation/tools/generator/templates
-			currentDir := execDir
-			for i := 0; i < 10; i++ { // Limit search depth
-				testPath := filepath.Join(currentDir, "generator", "templates", templateName)
-				if _, err := os.Stat(testPath); err == nil {
-					templatePath = testPath
-					break
-				}
-				testPath = filepath.Join(currentDir, "tools", "generator", "templates", templateName)
-				if _, err := os.Stat(testPath); err == nil {
-					templatePath = testPath
-					break
-				}
-				testPath = filepath.Join(currentDir, "api-generation", "tools", "generator", "templates", templateName)
-				if _, err := os.Stat(testPath); err == nil {
-					templatePath = testPath
-					break
-				}
-				currentDir = filepath.Dir(currentDir)
-				if currentDir == "/" || currentDir == filepath.Dir(currentDir) {
-					break
+			templatePath = filepath.Join(wd, "..", "templates", templateName)
+			
+			// If still not found, try to find the templates directory in the project structure
+			if _, err := os.Stat(templatePath); os.IsNotExist(err) {
+				// Walk up from the current directory to find templates
+				currentDir := wd
+				for i := 0; i < 10; i++ { // Limit search depth
+					testPath := filepath.Join(currentDir, "templates", templateName)
+					if _, err := os.Stat(testPath); err == nil {
+						templatePath = testPath
+						break
+					}
+					testPath = filepath.Join(currentDir, "generator", "templates", templateName)
+					if _, err := os.Stat(testPath); err == nil {
+						templatePath = testPath
+						break
+					}
+					testPath = filepath.Join(currentDir, "tools", "generator", "templates", templateName)
+					if _, err := os.Stat(testPath); err == nil {
+						templatePath = testPath
+						break
+					}
+					testPath = filepath.Join(currentDir, "api-generation", "tools", "generator", "templates", templateName)
+					if _, err := os.Stat(testPath); err == nil {
+						templatePath = testPath
+						break
+					}
+					currentDir = filepath.Dir(currentDir)
+					if currentDir == "/" || currentDir == filepath.Dir(currentDir) {
+						break
+					}
 				}
 			}
 		}

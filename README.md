@@ -21,19 +21,19 @@ git clone https://github.com/shogotsuneto/dapr-actor-gen.git
 cd dapr-actor-gen
 
 # Install the generator binary
-./tools/scripts/install.sh
+./scripts/install.sh
 ```
 
-This will build `dapr-actor-gen` and place it in `tools/bin/`.
+This will build `dapr-actor-gen` and place it in `bin/`.
 
 ### 2. Generate Code from OpenAPI Schema
 
 ```bash
 # Generate from the example schema
-./tools/scripts/generate.sh openapi examples/schemas/openapi/multi-actors.yaml ./output
+./scripts/generate.sh openapi examples/multi-actors/openapi.yaml ./output
 
 # Or use the binary directly
-./tools/bin/dapr-actor-gen examples/schemas/openapi/multi-actors.yaml ./output
+./bin/dapr-actor-gen examples/multi-actors/openapi.yaml ./output
 ```
 
 ### 3. Use Generated Code

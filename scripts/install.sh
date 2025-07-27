@@ -31,9 +31,8 @@ log_info "Go version: $(go version)"
 
 # Create tools directory if it doesn't exist
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TOOLS_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-BIN_DIR="$TOOLS_DIR/bin"
-ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+BIN_DIR="$ROOT_DIR/bin"
 mkdir -p "$BIN_DIR"
 
 log_info "Installing tools to: $BIN_DIR"
@@ -67,7 +66,7 @@ log_info "Building custom OpenAPI code generation tools..."
 log_info "Building consolidated generator..."
 cd "$ROOT_DIR"  # Now the generator is in the root directory
 go mod tidy
-go build -o "$BIN_DIR/dapr-actor-gen" .
+go build -o "$BIN_DIR/dapr-actor-gen" ./cmd
 cd - > /dev/null
 log_info "✓ dapr-actor-gen built successfully"
 
@@ -81,7 +80,7 @@ log_info "Checking external dependencies..."
 log_info "ℹ️  Consolidated OpenAPI generator built (replaces separate types/interface generators)"
 
 # Create PATH export script
-PATH_SCRIPT="$TOOLS_DIR/scripts/setup-env.sh"
+PATH_SCRIPT="$ROOT_DIR/scripts/setup-env.sh"
 cat > "$PATH_SCRIPT" << EOF
 #!/bin/bash
 # Source this file to add API generation tools to your PATH
@@ -97,7 +96,7 @@ log_info ""
 log_info "To use the tools, either:"
 log_info "  1. Add $BIN_DIR to your PATH"
 log_info "  2. Source $PATH_SCRIPT"
-log_info "  3. Use the generation scripts in tools/scripts/"
+log_info "  3. Use the generation scripts in scripts/"
 log_info ""
 log_info "Available tools:"
 ls -1 "$BIN_DIR" 2>/dev/null | sed 's/^/  - /' || log_warn "No tools found in $BIN_DIR"

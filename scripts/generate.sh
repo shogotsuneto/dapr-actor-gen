@@ -26,8 +26,8 @@ log_step() {
 
 # Get script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"  # Root of the generator repository
-BIN_DIR="$ROOT_DIR/tools/bin"
+ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"  # Root of the generator repository
+BIN_DIR="$ROOT_DIR/bin"
 
 # Add tools to PATH for this script
 export PATH="$BIN_DIR:$PATH"
@@ -54,7 +54,7 @@ usage() {
     echo "  graphql     - GraphQL schema (planned)"
     echo ""
     echo "Examples:"
-    echo "  $0 openapi schemas/openapi/multi-actors.yaml"
+    echo "  $0 openapi examples/multi-actors/openapi.yaml"
     echo ""
 }
 
