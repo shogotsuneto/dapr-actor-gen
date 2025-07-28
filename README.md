@@ -13,15 +13,15 @@ This tool enables schema-first development for Dapr actors by generating Go code
 
 ## Quick Start
 
-### 1. Install the Generator
+### 1. Build the Generator
 
 ```bash
 # Clone the repository
 git clone https://github.com/shogotsuneto/dapr-actor-gen.git
 cd dapr-actor-gen
 
-# Install the generator binary
-make install
+# Build the generator binary
+make build
 ```
 
 This will build `dapr-actor-gen` and place it in `bin/`.
@@ -96,9 +96,6 @@ make help
 # Build the binary
 make build
 
-# Install (build + setup)
-make install
-
 # Run tests
 make test
 
@@ -111,12 +108,8 @@ make generate SCHEMA=path/to/schema.yaml OUTPUT=./output
 # Clean build artifacts
 make clean
 
-# Development cycle (clean + build + test)
-make dev-all
-
-# Set up PATH environment
-make setup-env
-```
+# Tidy go modules
+make tidy
 ```
 
 ## OpenAPI Schema Requirements
@@ -205,13 +198,21 @@ For each actor type found in your OpenAPI spec, the generator creates:
 git clone https://github.com/shogotsuneto/dapr-actor-gen.git
 cd dapr-actor-gen
 go mod tidy
-go build -o dapr-actor-gen .
+# Build using make (recommended)
+make build
+# Or build directly
+go build -o bin/dapr-actor-gen ./cmd
 ```
+
+The built binary will be available at `bin/dapr-actor-gen`.
 
 ## Testing
 
 ```bash
-go test .
+# Run tests using make (recommended)
+make test
+# Or run directly
+go test ./...
 ```
 
 ## Contributing

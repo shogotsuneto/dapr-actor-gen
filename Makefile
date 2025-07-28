@@ -1,5 +1,5 @@
 # Makefile for dapr-actor-gen
-.PHONY: help build install test clean generate setup-env tidy
+.PHONY: help build test clean generate tidy
 
 # Configuration
 GO_VERSION := 1.19
@@ -26,16 +26,6 @@ build: ## Build the dapr-actor-gen binary
 	@go build -o $(BIN_DIR)/$(BINARY_NAME) ./$(CMD_DIR)
 	@echo "$(GREEN)[INFO]$(NC) ✓ $(BINARY_NAME) built successfully"
 
-install: build ## Install the generator (build binary and set up environment)
-	@echo "$(GREEN)[INFO]$(NC) Installing API Generation Tools..."
-	@echo "$(GREEN)[INFO]$(NC) Go version: $$(go version)"
-	@echo "$(GREEN)[INFO]$(NC) ✓ $(BINARY_NAME) installed to $(BIN_DIR)/"
-	@echo ""
-	@echo "$(GREEN)[INFO]$(NC) To use the tools, either:"
-	@echo "$(GREEN)[INFO]$(NC)   1. Add $$(pwd)/$(BIN_DIR) to your PATH"
-	@echo "$(GREEN)[INFO]$(NC)   2. Run 'make setup-env' to export PATH"
-	@echo "$(GREEN)[INFO]$(NC)   3. Use 'make generate' for code generation"
-
 test: ## Run all tests
 	@echo "$(GREEN)[INFO]$(NC) Running tests..."
 	@go test -v ./...
@@ -52,13 +42,6 @@ clean: ## Clean build artifacts and generated files
 	@rm -rf $(OUTPUT_DIR)
 	@rm -rf test-output
 	@echo "$(GREEN)[INFO]$(NC) ✓ Clean completed"
-
-setup-env: ## Export PATH to include the bin directory
-	@echo "$(GREEN)[INFO]$(NC) API generation tools PATH setup:"
-	@echo "export PATH=\"$$(pwd)/$(BIN_DIR):\$$PATH\""
-	@echo ""
-	@echo "$(GREEN)[INFO]$(NC) Available tools:"
-	@ls -1 $(BIN_DIR) 2>/dev/null | sed 's/^/  - /' || echo "  (No tools found - run 'make install' first)"
 
 generate: ## Generate code from OpenAPI schema (usage: make generate SCHEMA=path/to/schema.yaml OUTPUT=output/dir)
 	@if [ -z "$(SCHEMA)" ]; then \
@@ -96,8 +79,6 @@ dev-build: tidy build ## Development build (tidy + build)
 
 dev-test: tidy test ## Development test (tidy + test)
 
-dev-all: clean dev-build dev-test ## Full development cycle (clean + build + test)
-
 # Check if Go is installed
 check-go:
 	@if ! command -v go &> /dev/null; then \
@@ -105,5 +86,3 @@ check-go:
 		exit 1; \
 	fi
 
-# Install with dependency check
-install-safe: check-go install ## Install with Go dependency check
