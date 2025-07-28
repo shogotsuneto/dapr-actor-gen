@@ -21,7 +21,7 @@ git clone https://github.com/shogotsuneto/dapr-actor-gen.git
 cd dapr-actor-gen
 
 # Install the generator binary
-./scripts/install.sh
+make install
 ```
 
 This will build `dapr-actor-gen` and place it in `bin/`.
@@ -30,7 +30,10 @@ This will build `dapr-actor-gen` and place it in `bin/`.
 
 ```bash
 # Generate from the example schema
-./scripts/generate.sh openapi examples/multi-actors/openapi.yaml ./output
+make generate SCHEMA=examples/multi-actors/openapi.yaml OUTPUT=./output
+
+# Or use the convenient example target
+make generate-example
 
 # Or use the binary directly
 ./bin/dapr-actor-gen examples/multi-actors/openapi.yaml ./output
@@ -80,6 +83,40 @@ func main() {
     s.RegisterActorImplFactoryContext(counteractor.NewActorFactory())
     s.Start()
 }
+```
+
+## Available Make Targets
+
+The project uses Make for common development tasks:
+
+```bash
+# Show all available targets
+make help
+
+# Build the binary
+make build
+
+# Install (build + setup)
+make install
+
+# Run tests
+make test
+
+# Generate code from example schema
+make generate-example
+
+# Generate code from custom schema
+make generate SCHEMA=path/to/schema.yaml OUTPUT=./output
+
+# Clean build artifacts
+make clean
+
+# Development cycle (clean + build + test)
+make dev-all
+
+# Set up PATH environment
+make setup-env
+```
 ```
 
 ## OpenAPI Schema Requirements

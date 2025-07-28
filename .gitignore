@@ -1,6 +1,10 @@
 # Binaries
 dapr-actor-gen
 tools/bin/
+bin/
+
+# Generated code
+generated/
 
 # Go build artifacts
 *.exe

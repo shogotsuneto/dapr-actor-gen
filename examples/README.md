@@ -22,8 +22,11 @@ This example demonstrates:
 Generate code from the example schema:
 
 ```bash
-# Using the generation script
-./scripts/generate.sh openapi examples/multi-actors/openapi.yaml ./output
+# Using make targets
+make generate SCHEMA=examples/multi-actors/openapi.yaml OUTPUT=./output
+
+# Or using the convenient example target
+make generate-example
 
 # Or using the binary directly  
 ./bin/dapr-actor-gen examples/multi-actors/openapi.yaml ./output
