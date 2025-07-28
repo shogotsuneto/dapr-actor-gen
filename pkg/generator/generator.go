@@ -176,23 +176,28 @@ func getTemplatePath(templateName string) string {
 	
 	// Look for templates directory relative to the executable
 	execDir := filepath.Dir(execPath)
-	templatePath := filepath.Join(execDir, "..", "templates", templateName)
+	templatePath := filepath.Join(execDir, "..", "pkg", "generator", "templates", templateName)
 	
 	// If not found, try relative to current working directory (for development)
 	if _, err := os.Stat(templatePath); os.IsNotExist(err) {
 		wd, _ := os.Getwd()
-		templatePath = filepath.Join(wd, "templates", templateName)
+		templatePath = filepath.Join(wd, "pkg", "generator", "templates", templateName)
 		
-		// If still not found, try one directory up (for tests in pkg/)
+		// If still not found, try one directory up (for tests in pkg/generator)
 		if _, err := os.Stat(templatePath); os.IsNotExist(err) {
-			templatePath = filepath.Join(wd, "..", "templates", templateName)
+			templatePath = filepath.Join(wd, "templates", templateName)
 			
 			// If still not found, try to find the templates directory in the project structure
 			if _, err := os.Stat(templatePath); os.IsNotExist(err) {
 				// Walk up from the current directory to find templates
 				currentDir := wd
 				for i := 0; i < 10; i++ { // Limit search depth
-					testPath := filepath.Join(currentDir, "templates", templateName)
+					testPath := filepath.Join(currentDir, "pkg", "generator", "templates", templateName)
+					if _, err := os.Stat(testPath); err == nil {
+						templatePath = testPath
+						break
+					}
+					testPath = filepath.Join(currentDir, "templates", templateName)
 					if _, err := os.Stat(testPath); err == nil {
 						templatePath = testPath
 						break

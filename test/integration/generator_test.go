@@ -1,4 +1,4 @@
-package generator
+package integration
 
 import (
 	"os"
@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/shogotsuneto/dapr-actor-gen/pkg/generator"
+	"github.com/shogotsuneto/dapr-actor-gen/pkg/parser"
 )
 
 func TestBasicActorParsing(t *testing.T) {
@@ -17,8 +19,8 @@ func TestBasicActorParsing(t *testing.T) {
 	}
 
 	// Parse the spec to intermediate model
-	parser := NewOpenAPIParser(doc)
-	model, err := parser.Parse()
+	p := parser.NewOpenAPIParser(doc)
+	model, err := p.Parse()
 	if err != nil {
 		t.Fatalf("Failed to parse OpenAPI spec: %v", err)
 	}
@@ -78,8 +80,8 @@ func TestMultiActorTypeDuplication(t *testing.T) {
 	}
 
 	// Parse the spec to intermediate model
-	parser := NewOpenAPIParser(doc)
-	model, err := parser.Parse()
+	p := parser.NewOpenAPIParser(doc)
+	model, err := p.Parse()
 	if err != nil {
 		t.Fatalf("Failed to parse OpenAPI spec: %v", err)
 	}
@@ -90,7 +92,7 @@ func TestMultiActorTypeDuplication(t *testing.T) {
 	}
 
 	// Verify actors exist
-	actorTypes := make(map[string]*ActorInterface)
+	actorTypes := make(map[string]*generator.ActorInterface)
 	for i, actor := range model.Actors {
 		actorTypes[actor.ActorType] = &model.Actors[i]
 	}
@@ -165,8 +167,8 @@ func TestTypeAliasGeneration(t *testing.T) {
 	}
 
 	// Parse the spec to intermediate model
-	parser := NewOpenAPIParser(doc)
-	model, err := parser.Parse()
+	p := parser.NewOpenAPIParser(doc)
+	model, err := p.Parse()
 	if err != nil {
 		t.Fatalf("Failed to parse OpenAPI spec: %v", err)
 	}
@@ -221,16 +223,16 @@ func TestGeneratorWithTestSpecs(t *testing.T) {
 				t.Fatalf("Failed to load OpenAPI spec %s: %v", tt.specFile, err)
 			}
 
-			parser := NewOpenAPIParser(doc)
-			model, err := parser.Parse()
+			p := parser.NewOpenAPIParser(doc)
+			model, err := p.Parse()
 			if err != nil {
 				t.Fatalf("Failed to parse OpenAPI spec: %v", err)
 			}
 
 			// Generate code using the intermediate model
-			generator := &Generator{}
+			gen := &generator.Generator{}
 			outputDir := filepath.Join("test-output", tt.name)
-			err = generator.GenerateActorPackages(model, outputDir)
+			err = gen.GenerateActorPackages(model, outputDir)
 			if err != nil {
 				t.Fatalf("Failed to generate actor packages: %v", err)
 			}

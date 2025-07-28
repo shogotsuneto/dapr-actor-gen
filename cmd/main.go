@@ -5,7 +5,8 @@ import (
 	"os"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	generator "github.com/shogotsuneto/dapr-actor-gen/pkg"
+	"github.com/shogotsuneto/dapr-actor-gen/pkg/generator"
+	"github.com/shogotsuneto/dapr-actor-gen/pkg/parser"
 )
 
 func main() {
@@ -24,8 +25,8 @@ func main() {
 	}
 
 	// Parse OpenAPI to intermediate model
-	parser := generator.NewOpenAPIParser(doc)
-	model, err := parser.Parse()
+	p := parser.NewOpenAPIParser(doc)
+	model, err := p.Parse()
 	if err != nil {
 		log.Fatalf("Failed to parse OpenAPI spec: %v", err)
 	}

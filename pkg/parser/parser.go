@@ -1,4 +1,4 @@
-package generator
+package parser
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	"unicode"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/shogotsuneto/dapr-actor-gen/pkg/generator"
 )
 
 // OpenAPIParser handles conversion from OpenAPI specification to intermediate model
@@ -19,9 +20,9 @@ func NewOpenAPIParser(doc *openapi3.T) *OpenAPIParser {
 	return &OpenAPIParser{doc: doc}
 }
 
-// Parse converts the OpenAPI specification to an intermediate GenerationModel
-func (p *OpenAPIParser) Parse() (*GenerationModel, error) {
-	model := &GenerationModel{}
+// Parse converts the OpenAPI specification to an intermediate generator.GenerationModel
+func (p *OpenAPIParser) Parse() (*generator.GenerationModel, error) {
+	model := &generator.GenerationModel{}
 
 	// Parse actors and their methods first
 	if err := p.parseActors(model); err != nil {
@@ -37,7 +38,7 @@ func (p *OpenAPIParser) Parse() (*GenerationModel, error) {
 }
 
 // parseAndCategorizeTypes orchestrates the parsing, sorting, and categorization of types
-func (p *OpenAPIParser) parseAndCategorizeTypes(model *GenerationModel) error {
+func (p *OpenAPIParser) parseAndCategorizeTypes(model *generator.GenerationModel) error {
 	// Parse all types from the OpenAPI spec
 	allTypes, err := p.parseTypes()
 	if err != nil {
@@ -52,12 +53,12 @@ func (p *OpenAPIParser) parseAndCategorizeTypes(model *GenerationModel) error {
 }
 
 // parseTypes extracts type definitions from OpenAPI components
-func (p *OpenAPIParser) parseTypes() (TypeDefinitions, error) {
-	var allStructs []StructType
-	var allAliases []TypeAlias
+func (p *OpenAPIParser) parseTypes() (generator.TypeDefinitions, error) {
+	var allStructs []generator.StructType
+	var allAliases []generator.TypeAlias
 
 	if p.doc.Components == nil || p.doc.Components.Schemas == nil {
-		return TypeDefinitions{
+		return generator.TypeDefinitions{
 			Structs: allStructs,
 			Aliases: allAliases,
 		}, nil
@@ -71,7 +72,7 @@ func (p *OpenAPIParser) parseTypes() (TypeDefinitions, error) {
 		if !schema.Type.Is("object") || schema.Properties == nil || len(schema.Properties) == 0 {
 			// This should be a type alias
 			goType := getGoType(schema)
-			allAliases = append(allAliases, TypeAlias{
+			allAliases = append(allAliases, generator.TypeAlias{
 				Name:         name,
 				Description:  schema.Description,
 				AliasTarget:  goType,
@@ -79,7 +80,7 @@ func (p *OpenAPIParser) parseTypes() (TypeDefinitions, error) {
 			})
 		} else if schema.Type.Is("object") && schema.Properties != nil {
 			// Generate struct type
-			fields := []Field{}
+			fields := []generator.Field{}
 			
 			for propName, propRef := range schema.Properties {
 				prop := propRef.Value
@@ -102,14 +103,14 @@ func (p *OpenAPIParser) parseTypes() (TypeDefinitions, error) {
 				if !contains(schema.Required, propName) {
 					jsonTag += ",omitempty"
 				}
-				fields = append(fields, Field{
+				fields = append(fields, generator.Field{
 					Name:    capitalizeFirst(propName),
 					Type:    goType,
 					JSONTag: jsonTag,
 					Comment: prop.Description,
 				})
 			}
-			allStructs = append(allStructs, StructType{
+			allStructs = append(allStructs, generator.StructType{
 				Name:        name,
 				Description: schema.Description,
 				Fields:      fields,
@@ -123,7 +124,7 @@ func (p *OpenAPIParser) parseTypes() (TypeDefinitions, error) {
 			p := param.Value
 			if p.Schema != nil && p.Schema.Value.Type.Is("string") {
 				aliasName := capitalizeFirst(p.Name)
-				allAliases = append(allAliases, TypeAlias{
+				allAliases = append(allAliases, generator.TypeAlias{
 					Name:         aliasName,
 					Description:  fmt.Sprintf("defines model for %s", p.Name),
 					AliasTarget:  "string",
@@ -139,7 +140,7 @@ func (p *OpenAPIParser) parseTypes() (TypeDefinitions, error) {
 			param := paramRef.Value
 			if param.Schema != nil && param.Schema.Value.Type.Is("string") {
 				aliasName := capitalizeFirst(paramName)
-				allAliases = append(allAliases, TypeAlias{
+				allAliases = append(allAliases, generator.TypeAlias{
 					Name:         aliasName,
 					Description:  fmt.Sprintf("defines model for %s", param.Name),
 					AliasTarget:  "string",
@@ -149,14 +150,14 @@ func (p *OpenAPIParser) parseTypes() (TypeDefinitions, error) {
 		}
 	}
 
-	return TypeDefinitions{
+	return generator.TypeDefinitions{
 		Structs: allStructs,
 		Aliases: allAliases,
 	}, nil
 }
 
 // sortTypes handles all sorting logic for consistent ordering
-func (p *OpenAPIParser) sortTypes(types *TypeDefinitions) {
+func (p *OpenAPIParser) sortTypes(types *generator.TypeDefinitions) {
 	// Sort all structs by name
 	sort.Slice(types.Structs, func(i, j int) bool {
 		return types.Structs[i].Name < types.Structs[j].Name
@@ -176,7 +177,7 @@ func (p *OpenAPIParser) sortTypes(types *TypeDefinitions) {
 }
 
 // parseActors orchestrates the parsing, building, sorting, and creation of actor interfaces
-func (p *OpenAPIParser) parseActors(model *GenerationModel) error {
+func (p *OpenAPIParser) parseActors(model *generator.GenerationModel) error {
 	// Extract operations grouped by actor type
 	actorOperations, err := p.extractActorOperations()
 	if err != nil {
@@ -197,8 +198,8 @@ func (p *OpenAPIParser) parseActors(model *GenerationModel) error {
 }
 
 // extractActorOperations extracts and groups operations by actor type from OpenAPI paths
-func (p *OpenAPIParser) extractActorOperations() (map[string][]ActorOperation, error) {
-	actorOperations := make(map[string][]ActorOperation)
+func (p *OpenAPIParser) extractActorOperations() (map[string][]generator.ActorOperation, error) {
+	actorOperations := make(map[string][]generator.ActorOperation)
 	discoveredActorTypes := make(map[string]bool)
 
 	for path, pathItem := range p.doc.Paths.Map() {
@@ -226,7 +227,7 @@ func (p *OpenAPIParser) extractActorOperations() (map[string][]ActorOperation, e
 			discoveredActorTypes[actorType] = true
 
 			// Store operation for processing
-			actorOperations[actorType] = append(actorOperations[actorType], ActorOperation{
+			actorOperations[actorType] = append(actorOperations[actorType], generator.ActorOperation{
 				Operation:  op,
 				HTTPMethod: httpMethod,
 				Path:       path,
@@ -243,11 +244,11 @@ func (p *OpenAPIParser) extractActorOperations() (map[string][]ActorOperation, e
 }
 
 // buildActorMethods builds method definitions from actor operations
-func (p *OpenAPIParser) buildActorMethods(actorOperations map[string][]ActorOperation) (map[string][]Method, error) {
-	actorMethods := make(map[string][]Method)
+func (p *OpenAPIParser) buildActorMethods(actorOperations map[string][]generator.ActorOperation) (map[string][]generator.Method, error) {
+	actorMethods := make(map[string][]generator.Method)
 
 	for actorType, operations := range actorOperations {
-		var methods []Method
+		var methods []generator.Method
 
 		for _, operation := range operations {
 			// Extract method details
@@ -266,7 +267,7 @@ func (p *OpenAPIParser) buildActorMethods(actorOperations map[string][]ActorOper
 }
 
 // sortActors handles all sorting logic for consistent ordering
-func (p *OpenAPIParser) sortActors(actorMethods *map[string][]Method) {
+func (p *OpenAPIParser) sortActors(actorMethods *map[string][]generator.Method) {
 	// Sort methods within each actor by name
 	for actorType := range *actorMethods {
 		methods := (*actorMethods)[actorType]
@@ -277,8 +278,8 @@ func (p *OpenAPIParser) sortActors(actorMethods *map[string][]Method) {
 	}
 }
 
-// buildActorInterfaces creates the final ActorInterface structs
-func (p *OpenAPIParser) buildActorInterfaces(model *GenerationModel, actorMethods map[string][]Method) error {
+// buildActorInterfaces creates the final generator.ActorInterface structs
+func (p *OpenAPIParser) buildActorInterfaces(model *generator.GenerationModel, actorMethods map[string][]generator.Method) error {
 	for actorType, methods := range actorMethods {
 		if len(methods) == 0 {
 			continue // Skip actor types with no methods
@@ -287,7 +288,7 @@ func (p *OpenAPIParser) buildActorInterfaces(model *GenerationModel, actorMethod
 		interfaceName := actorType + "API"
 		interfaceDesc := fmt.Sprintf("defines the interface that must be implemented to satisfy the OpenAPI schema for %s", actorType)
 
-		model.Actors = append(model.Actors, ActorInterface{
+		model.Actors = append(model.Actors, generator.ActorInterface{
 			ActorType:     actorType,
 			InterfaceName: interfaceName,
 			InterfaceDesc: interfaceDesc,
@@ -304,7 +305,7 @@ func (p *OpenAPIParser) buildActorInterfaces(model *GenerationModel, actorMethod
 }
 
 // extractMethodFromOperation extracts method information from OpenAPI operation
-func (p *OpenAPIParser) extractMethodFromOperation(op *openapi3.Operation, httpMethod, path string) (*Method, error) {
+func (p *OpenAPIParser) extractMethodFromOperation(op *openapi3.Operation, httpMethod, path string) (*generator.Method, error) {
 	// For Dapr actors, extract method name from path (e.g., /{actorType}/{actorId}/method/get -> get)
 	methodName := p.extractMethodNameFromPath(path)
 	if methodName == "" {
@@ -316,7 +317,7 @@ func (p *OpenAPIParser) extractMethodFromOperation(op *openapi3.Operation, httpM
 		return nil, fmt.Errorf("method name '%s' must start with a capital letter (Go exported method requirement) in path '%s'", methodName, path)
 	}
 
-	method := &Method{
+	method := &generator.Method{
 		Name:       methodName,
 		Comment:    getOperationComment(op),
 		HasRequest: false,
@@ -372,7 +373,7 @@ func (p *OpenAPIParser) extractActorTypeFromPath(path string) string {
 		}
 	}
 	
-	// Actor type should be 2 positions before "method"
+	// generator.Actor type should be 2 positions before "method"
 	// .../actorType/{actorId}/method/methodName
 	if methodIndex >= 2 {
 		return parts[methodIndex-2]
@@ -422,7 +423,7 @@ func (p *OpenAPIParser) extractReturnType(op *openapi3.Operation) string {
 
 // isCustomType checks if a type name refers to a custom type defined in the model
 // isCustomTypeInDefinitions checks if a type name exists in our type definitions
-func (p *OpenAPIParser) isCustomTypeInDefinitions(typeName string, types TypeDefinitions) bool {
+func (p *OpenAPIParser) isCustomTypeInDefinitions(typeName string, types generator.TypeDefinitions) bool {
 	// List of Go built-in types that are not custom
 	builtinTypes := map[string]bool{
 		"string": true, "int": true, "int32": true, "int64": true,
@@ -453,7 +454,7 @@ func (p *OpenAPIParser) isCustomTypeInDefinitions(typeName string, types TypeDef
 
 // categorizeTypesIntoActors analyzes types and assigns them directly to actors that use them
 // Each actor gets its own copy of types it uses
-func (p *OpenAPIParser) categorizeTypesIntoActors(model *GenerationModel, allTypes TypeDefinitions) error {
+func (p *OpenAPIParser) categorizeTypesIntoActors(model *generator.GenerationModel, allTypes generator.TypeDefinitions) error {
 	// Create a map to track which types are used by which actors
 	typeUsage := make(map[string]map[string]bool) // type -> actor -> used
 	
@@ -521,9 +522,9 @@ func (p *OpenAPIParser) categorizeTypesIntoActors(model *GenerationModel, allTyp
 
 	// Initialize actor type collections
 	for i := range model.Actors {
-		model.Actors[i].Types = TypeDefinitions{
-			Structs: []StructType{},
-			Aliases: []TypeAlias{},
+		model.Actors[i].Types = generator.TypeDefinitions{
+			Structs: []generator.StructType{},
+			Aliases: []generator.TypeAlias{},
 		}
 	}
 	
