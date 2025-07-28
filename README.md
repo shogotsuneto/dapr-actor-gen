@@ -29,14 +29,11 @@ This will build `dapr-actor-gen` and place it in `bin/`.
 ### 2. Generate Code from OpenAPI Schema
 
 ```bash
-# Generate from the example schema
-make generate SCHEMA=examples/multi-actors/openapi.yaml OUTPUT=./output
-
-# Or use the convenient example target
-make generate-example
-
-# Or use the binary directly
+# Use the binary directly to generate from the example schema
 ./bin/dapr-actor-gen examples/multi-actors/openapi.yaml ./output
+
+# Or generate to a different output directory
+./bin/dapr-actor-gen examples/multi-actors/openapi.yaml ./generated
 ```
 
 ### 3. Use Generated Code
@@ -99,17 +96,23 @@ make build
 # Run tests
 make test
 
-# Generate code from example schema
-make generate-example
-
-# Generate code from custom schema
-make generate SCHEMA=path/to/schema.yaml OUTPUT=./output
-
 # Clean build artifacts
 make clean
 
 # Tidy go modules
 make tidy
+```
+
+## Using the Binary Directly
+
+After building with `make build`, the binary will be available at `./bin/dapr-actor-gen`:
+
+```bash
+# Generate code from any OpenAPI schema
+./bin/dapr-actor-gen path/to/schema.yaml ./output
+
+# Example with the provided sample schema
+./bin/dapr-actor-gen examples/multi-actors/openapi.yaml ./generated
 ```
 
 ## OpenAPI Schema Requirements
@@ -161,7 +164,7 @@ Key requirements:
 
 The `examples/` directory contains:
 
-- **schemas/openapi/multi-actors.yaml** - Example OpenAPI spec with multiple actor types
+- **multi-actors/openapi.yaml** - Example OpenAPI spec with multiple actor types
 - Generated code examples and documentation
 
 ## Command Line Usage

@@ -1,5 +1,5 @@
 # Makefile for dapr-actor-gen
-.PHONY: help build test clean generate tidy
+.PHONY: help build test clean tidy
 
 # Configuration
 GO_VERSION := 1.19
@@ -42,37 +42,6 @@ clean: ## Clean build artifacts and generated files
 	@rm -rf $(OUTPUT_DIR)
 	@rm -rf test-output
 	@echo "$(GREEN)[INFO]$(NC) ✓ Clean completed"
-
-generate: ## Generate code from OpenAPI schema (usage: make generate SCHEMA=path/to/schema.yaml OUTPUT=output/dir)
-	@if [ -z "$(SCHEMA)" ]; then \
-		echo "$(RED)[ERROR]$(NC) SCHEMA parameter is required"; \
-		echo "$(YELLOW)[INFO]$(NC) Usage: make generate SCHEMA=examples/multi-actors/openapi.yaml [OUTPUT=./generated]"; \
-		exit 1; \
-	fi
-	@if [ ! -f "$(SCHEMA)" ]; then \
-		echo "$(RED)[ERROR]$(NC) Schema file not found: $(SCHEMA)"; \
-		exit 1; \
-	fi
-	@if [ ! -f "$(BIN_DIR)/$(BINARY_NAME)" ]; then \
-		echo "$(YELLOW)[WARN]$(NC) Binary not found, building first..."; \
-		$(MAKE) build; \
-	fi
-	@OUTPUT_PATH=$${OUTPUT:-$(OUTPUT_DIR)}; \
-	echo "$(GREEN)[INFO]$(NC) === API Code Generation ==="; \
-	echo "$(GREEN)[INFO]$(NC) Schema File: $(SCHEMA)"; \
-	echo "$(GREEN)[INFO]$(NC) Output Dir:  $$OUTPUT_PATH"; \
-	echo ""; \
-	mkdir -p "$$OUTPUT_PATH"; \
-	./$(BIN_DIR)/$(BINARY_NAME) "$(SCHEMA)" "$$OUTPUT_PATH"; \
-	echo ""; \
-	echo "$(GREEN)[INFO]$(NC) Generated files:"; \
-	find "$$OUTPUT_PATH" -type f -name "*.go" 2>/dev/null | sort | sed 's/^/  /' || echo "  (No files found)"; \
-	echo ""; \
-	echo "$(GREEN)[INFO]$(NC) ✓ Code generation completed successfully!"
-
-# Example targets for common use cases
-generate-example: ## Generate code from the example schema
-	@$(MAKE) generate SCHEMA=examples/multi-actors/openapi.yaml OUTPUT=./generated
 
 # Development targets
 dev-build: tidy build ## Development build (tidy + build)
