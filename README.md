@@ -206,6 +206,22 @@ go build -o bin/dapr-actor-gen ./cmd
 
 The built binary will be available at `bin/dapr-actor-gen`.
 
+### Cross-Compilation
+
+Build binaries for multiple platforms:
+
+```bash
+# Build for all platforms
+make build-all
+
+# Or build for specific platforms
+make build-linux   # Linux amd64/arm64
+make build-darwin  # macOS amd64/arm64
+make build-windows # Windows amd64
+```
+
+Binaries will be available in the `dist/` directory.
+
 ## Testing
 
 ```bash
@@ -214,6 +230,42 @@ make test
 # Or run directly
 go test ./...
 ```
+
+## Docker
+
+The project includes a Dockerfile for containerization:
+
+```bash
+# Build Docker image
+docker build -t dapr-actor-gen .
+
+# Run in container
+docker run --rm -v $(pwd)/examples:/examples -v $(pwd)/output:/output \
+  dapr-actor-gen /examples/multi-actors/openapi.yaml /output
+```
+
+Pre-built Docker images are available from GitHub Container Registry:
+
+```bash
+docker pull ghcr.io/shogotsuneto/dapr-actor-gen:latest
+```
+
+## Releases
+
+Releases are created through GitHub Actions with manual triggers. Each release includes:
+
+- **Multi-platform binaries**: Linux (amd64/arm64), macOS (amd64/arm64), Windows (amd64)
+- **Docker images**: Multi-architecture images published to GitHub Container Registry
+- **Release notes**: Automated generation with changelog and installation instructions
+
+### Release Process
+
+Releases can only be created from the `main` branch by maintainers:
+
+1. Go to the [Actions tab](../../actions/workflows/release.yml) in GitHub
+2. Click "Run workflow"
+3. Enter the version in `v*.*.*` format (e.g., `v1.0.0`)
+4. The workflow will create a draft release with all artifacts
 
 ## Contributing
 
