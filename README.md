@@ -30,9 +30,6 @@ This will build `dapr-actor-gen` and place it in `bin/`.
 
 ```bash
 # Use the binary directly to generate from the example schema
-./bin/dapr-actor-gen examples/multi-actors/openapi.yaml ./output
-
-# Or generate to a different output directory
 ./bin/dapr-actor-gen examples/multi-actors/openapi.yaml ./generated
 ```
 
@@ -41,7 +38,7 @@ This will build `dapr-actor-gen` and place it in `bin/`.
 The generator creates actor-specific packages:
 
 ```
-output/
+generated/
 ├── counteractor/
 │   ├── api.go          # Generated interfaces and constants
 │   ├── factory.go      # Factory functions for registration
@@ -60,7 +57,7 @@ package main
 import (
     "context"
     "github.com/dapr/go-sdk/actor"
-    "./output/counteractor"
+    "./generated/counteractor"
 )
 
 // Implementation struct embeds the generated API interface
@@ -109,7 +106,7 @@ After building with `make build`, the binary will be available at `./bin/dapr-ac
 
 ```bash
 # Generate code from any OpenAPI schema
-./bin/dapr-actor-gen path/to/schema.yaml ./output
+./bin/dapr-actor-gen path/to/schema.yaml ./generated
 
 # Example with the provided sample schema
 ./bin/dapr-actor-gen examples/multi-actors/openapi.yaml ./generated
