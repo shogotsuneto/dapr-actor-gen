@@ -2,6 +2,7 @@
 dapr-actor-gen
 tools/bin/
 bin/
+dist/
 
 # Generated code
 generated/
