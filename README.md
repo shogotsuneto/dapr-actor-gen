@@ -233,22 +233,94 @@ go test ./...
 
 ## Docker
 
-The project includes a Dockerfile for containerization:
+Pre-built Docker images are available from GitHub Container Registry for immediate use, or you can build locally.
+
+### Using Pre-built Images
+
+Pull the latest image:
+```bash
+docker pull ghcr.io/shogotsuneto/dapr-actor-gen:latest
+```
+
+Or pull a specific version:
+```bash
+docker pull ghcr.io/shogotsuneto/dapr-actor-gen:v0.0.2
+```
+
+### Usage Examples
+
+#### Basic Usage
+Generate code from an OpenAPI specification:
+```bash
+# Using latest image
+docker run --rm \
+  -v $(pwd)/examples:/examples \
+  -v $(pwd)/output:/output \
+  ghcr.io/shogotsuneto/dapr-actor-gen:latest \
+  /examples/multi-actors/openapi.yaml /output
+
+# Using specific version
+docker run --rm \
+  -v $(pwd)/examples:/examples \
+  -v $(pwd)/output:/output \
+  ghcr.io/shogotsuneto/dapr-actor-gen:v0.0.2 \
+  /examples/multi-actors/openapi.yaml /output
+```
+
+#### Development Workflow
+Generate code from your project's OpenAPI spec:
+```bash
+# Mount your project directory and specify full paths
+docker run --rm \
+  -v $(pwd):/workspace \
+  ghcr.io/shogotsuneto/dapr-actor-gen:latest \
+  /workspace/api/openapi.yaml /workspace/generated
+```
+
+#### CI/CD Integration
+Use in continuous integration pipelines:
+```bash
+# GitHub Actions, Jenkins, etc.
+docker run --rm \
+  -v $GITHUB_WORKSPACE:/workspace \
+  ghcr.io/shogotsuneto/dapr-actor-gen:latest \
+  /workspace/schema/actors.yaml /workspace/src/generated
+```
+
+#### Multiple Output Directories
+Generate different actor types to separate directories:
+```bash
+# Generate to specific subdirectories
+docker run --rm \
+  -v $(pwd)/schemas:/schemas \
+  -v $(pwd)/generated:/generated \
+  ghcr.io/shogotsuneto/dapr-actor-gen:latest \
+  /schemas/payment-actors.yaml /generated/payment
+
+docker run --rm \
+  -v $(pwd)/schemas:/schemas \
+  -v $(pwd)/generated:/generated \
+  ghcr.io/shogotsuneto/dapr-actor-gen:latest \
+  /schemas/user-actors.yaml /generated/user
+```
+
+### Building Locally
+
+If you need to build the Docker image yourself:
 
 ```bash
 # Build Docker image
 docker build -t dapr-actor-gen .
 
-# Run in container
+# Run locally built image
 docker run --rm -v $(pwd)/examples:/examples -v $(pwd)/output:/output \
   dapr-actor-gen /examples/multi-actors/openapi.yaml /output
 ```
 
-Pre-built Docker images are available from GitHub Container Registry:
+### Notes
 
-```bash
-docker pull ghcr.io/shogotsuneto/dapr-actor-gen:latest
-```
+- **File Permissions**: Generated files are created with the container user's permissions. Ensure your output directory has appropriate write permissions.
+- **Volume Paths**: Use absolute paths in volume mounts (`/workspace/file.yaml` instead of `./file.yaml`) when mounting your project directory.
 
 ## Releases
 
