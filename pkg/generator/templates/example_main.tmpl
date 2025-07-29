@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"log"
 	"net/http"
 	"os"
@@ -10,7 +9,7 @@ import (
 
 	daprd "github.com/dapr/go-sdk/service/http"
 {{range .Actors}}
-	"./{{.ActorType | ToLower}}"
+	"{{$.ModuleName}}/{{.ActorType | ToLower}}"
 {{- end}}
 )
 

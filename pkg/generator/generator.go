@@ -235,9 +235,11 @@ func (g *Generator) generateExampleMain(model *GenerationModel, baseOutputDir st
 
 	// Generate main.go file
 	data := struct {
-		Actors []ActorInterface
+		Actors     []ActorInterface
+		ModuleName string
 	}{
-		Actors: model.Actors,
+		Actors:     model.Actors,
+		ModuleName: "example-dapr-actors",
 	}
 
 	mainFile, err := os.Create(filepath.Join(baseOutputDir, "main.go"))
