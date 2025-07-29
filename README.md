@@ -13,7 +13,21 @@ This tool enables schema-first development for Dapr actors by generating Go code
 
 ## Quick Start
 
-### 1. Build the Generator
+### Option 1: Using Docker (Recommended)
+
+```bash
+# Pull and use the latest pre-built image
+docker pull ghcr.io/shogotsuneto/dapr-actor-gen:latest
+
+# Generate code from OpenAPI schema
+docker run --rm \
+  -v $(pwd)/examples:/examples \
+  -v $(pwd)/output:/output \
+  ghcr.io/shogotsuneto/dapr-actor-gen:latest \
+  /examples/multi-actors/openapi.yaml /output
+```
+
+### Option 2: Build from Source
 
 ```bash
 # Clone the repository
@@ -22,13 +36,7 @@ cd dapr-actor-gen
 
 # Build the generator binary
 make build
-```
 
-This will build `dapr-actor-gen` and place it in `bin/`.
-
-### 2. Generate Code from OpenAPI Schema
-
-```bash
 # Use the binary directly to generate from the example schema
 ./bin/dapr-actor-gen examples/multi-actors/openapi.yaml ./generated
 ```
@@ -233,21 +241,15 @@ go test ./...
 
 ## Docker
 
-The project includes a Dockerfile for containerization:
+For local Docker builds:
 
 ```bash
 # Build Docker image
 docker build -t dapr-actor-gen .
 
-# Run in container
+# Run locally built image
 docker run --rm -v $(pwd)/examples:/examples -v $(pwd)/output:/output \
   dapr-actor-gen /examples/multi-actors/openapi.yaml /output
-```
-
-Pre-built Docker images are available from GitHub Container Registry:
-
-```bash
-docker pull ghcr.io/shogotsuneto/dapr-actor-gen:latest
 ```
 
 ## Releases
