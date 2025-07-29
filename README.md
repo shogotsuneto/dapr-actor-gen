@@ -206,57 +206,11 @@ dapr-actor-gen --generate-impl --generate-example openapi.yaml ./output
 
 #### Partial Implementation Generation (`--generate-impl`)
 
-Generates stub implementations alongside the existing API definitions. This creates `impl.go` files with method stubs that return not-implemented errors:
-
-```go
-// Counter is a partial implementation of CounterAPI.
-// This is a stub implementation with methods that return not-implemented errors.
-// You should implement the actual business logic for each method.
-type Counter struct {
-    actor.ServerImplBaseCtx
-}
-
-// Type returns the actor type for Dapr registration
-func (a *Counter) Type() string {
-    return ActorTypeCounter
-}
-
-// Increment Increment counter by 1
-// TODO: Implement the actual business logic for this method
-func (a *Counter) Increment(ctx context.Context) (*CounterState, error) {
-    return nil, errors.New("Increment method is not implemented")
-}
-```
+Generates stub implementations alongside the existing API definitions. This creates `impl.go` files with method stubs that return not-implemented errors.
 
 #### Example Application Generation (`--generate-example`)
 
-Creates a complete, compilable Dapr application with `main.go` and `go.mod` that demonstrates how to register and use the generated actors:
-
-```go
-package main
-
-import (
-    "log"
-    "net/http"
-    // ... other imports
-    
-    daprd "github.com/dapr/go-sdk/service/http"
-    "example-dapr-actors/counter"
-    "example-dapr-actors/bankaccount"
-)
-
-func main() {
-    // Create a Dapr service on port 8080
-    s := daprd.NewService(":8080")
-
-    // Register all generated actors
-    s.RegisterActorImplFactoryContext(counter.NewActorFactory())
-    s.RegisterActorImplFactoryContext(bankaccount.NewActorFactory())
-
-    // Setup graceful shutdown and start service
-    // ...
-}
-```
+Creates a complete, compilable Dapr application with `main.go` and `go.mod` that demonstrates how to register and use the generated actors.
 
 ### Generated File Structure
 
