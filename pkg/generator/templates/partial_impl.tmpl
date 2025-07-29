@@ -1,0 +1,30 @@
+// Package {{.PackageName}} provides primitives for OpenAPI-based schema validation.
+//
+// Code generated from OpenAPI specification. DO NOT EDIT manually.
+package {{.PackageName}}
+
+import (
+	"context"
+	"errors"
+	"github.com/dapr/go-sdk/actor"
+)
+
+// {{.Actor.ActorType}} is a partial implementation of {{.Actor.InterfaceName}}.
+// This is a stub implementation with methods that return not-implemented errors.
+// You should implement the actual business logic for each method.
+type {{.Actor.ActorType}} struct {
+	actor.ServerImplBase
+}
+
+// Type returns the actor type for Dapr registration
+func (a *{{.Actor.ActorType}}) Type() string {
+	return ActorType{{.Actor.ActorType}}
+}
+
+{{range .Actor.Methods}}
+// {{.Name}} {{.Comment}}
+// TODO: Implement the actual business logic for this method
+func (a *{{$.Actor.ActorType}}) {{.Name}}(ctx context.Context{{if .HasRequest}}, request {{.RequestType}}{{end}}) (*{{.ReturnType}}, error) {
+	return nil, errors.New("{{.Name}} method is not implemented")
+}
+{{end}}
