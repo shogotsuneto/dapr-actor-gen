@@ -2,11 +2,9 @@ package generator
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
-	"text/template"
 )
 
 // Generator handles code generation from the intermediate model
@@ -70,9 +68,8 @@ func (g *Generator) GenerateActorPackages(model *GenerationModel, baseOutputDir 
 }
 
 func (g *Generator) generateActorTypes(actorModel *ActorModel, outputDir string) error {
-	// Load template from file
-	templatePath := getTemplatePath("actor_types.tmpl")
-	tmpl, err := template.ParseFiles(templatePath)
+	// Load template from embedded filesystem
+	tmpl, err := getEmbeddedTemplate("actor_types.tmpl")
 	if err != nil {
 		return fmt.Errorf("failed to parse actor types template: %v", err)
 	}
@@ -109,9 +106,8 @@ func (g *Generator) generateActorTypes(actorModel *ActorModel, outputDir string)
 }
 
 func (g *Generator) generateActorInterface(actorModel *ActorModel, outputDir string) error {
-	// Load template from file
-	templatePath := getTemplatePath("interface.tmpl")
-	tmpl, err := template.ParseFiles(templatePath)
+	// Load template from embedded filesystem
+	tmpl, err := getEmbeddedTemplate("interface.tmpl")
 	if err != nil {
 		return fmt.Errorf("failed to parse interface template: %v", err)
 	}
@@ -138,9 +134,8 @@ func (g *Generator) generateActorInterface(actorModel *ActorModel, outputDir str
 }
 
 func (g *Generator) generateActorFactory(actorModel *ActorModel, outputDir string) error {
-	// Load template from file
-	templatePath := getTemplatePath("factory.tmpl")
-	tmpl, err := template.ParseFiles(templatePath)
+	// Load template from embedded filesystem
+	tmpl, err := getEmbeddedTemplate("factory.tmpl")
 	if err != nil {
 		return fmt.Errorf("failed to parse factory template: %v", err)
 	}
@@ -166,65 +161,3 @@ func (g *Generator) generateActorFactory(actorModel *ActorModel, outputDir strin
 }
 
 // Utility functions
-
-func getTemplatePath(templateName string) string {
-	// Get the directory where this binary is located
-	execPath, err := os.Executable()
-	if err != nil {
-		log.Fatalf("Failed to get executable path: %v", err)
-	}
-	
-	// Look for templates directory relative to the executable
-	execDir := filepath.Dir(execPath)
-	templatePath := filepath.Join(execDir, "..", "pkg", "generator", "templates", templateName)
-	
-	// If not found, try relative to current working directory (for development)
-	if _, err := os.Stat(templatePath); os.IsNotExist(err) {
-		wd, _ := os.Getwd()
-		templatePath = filepath.Join(wd, "pkg", "generator", "templates", templateName)
-		
-		// If still not found, try one directory up (for tests in pkg/generator)
-		if _, err := os.Stat(templatePath); os.IsNotExist(err) {
-			templatePath = filepath.Join(wd, "templates", templateName)
-			
-			// If still not found, try to find the templates directory in the project structure
-			if _, err := os.Stat(templatePath); os.IsNotExist(err) {
-				// Walk up from the current directory to find templates
-				currentDir := wd
-				for i := 0; i < 10; i++ { // Limit search depth
-					testPath := filepath.Join(currentDir, "pkg", "generator", "templates", templateName)
-					if _, err := os.Stat(testPath); err == nil {
-						templatePath = testPath
-						break
-					}
-					testPath = filepath.Join(currentDir, "templates", templateName)
-					if _, err := os.Stat(testPath); err == nil {
-						templatePath = testPath
-						break
-					}
-					testPath = filepath.Join(currentDir, "generator", "templates", templateName)
-					if _, err := os.Stat(testPath); err == nil {
-						templatePath = testPath
-						break
-					}
-					testPath = filepath.Join(currentDir, "tools", "generator", "templates", templateName)
-					if _, err := os.Stat(testPath); err == nil {
-						templatePath = testPath
-						break
-					}
-					testPath = filepath.Join(currentDir, "api-generation", "tools", "generator", "templates", templateName)
-					if _, err := os.Stat(testPath); err == nil {
-						templatePath = testPath
-						break
-					}
-					currentDir = filepath.Dir(currentDir)
-					if currentDir == "/" || currentDir == filepath.Dir(currentDir) {
-						break
-					}
-				}
-			}
-		}
-	}
-	
-	return templatePath
-}

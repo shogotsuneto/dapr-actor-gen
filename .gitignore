@@ -6,6 +6,7 @@ dist/
 
 # Generated code
 generated/
+test-generated/
 
 # Go build artifacts
 *.exe
