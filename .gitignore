@@ -18,6 +18,9 @@ test-generated/
 # Test binary, built with `go test -c`
 *.test
 
+# Compiled binaries in examples
+examples/*/[!*.]*
+
 # Output of the go coverage tool
 *.out
 
