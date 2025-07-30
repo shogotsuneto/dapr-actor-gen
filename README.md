@@ -175,13 +175,42 @@ The `examples/` directory contains:
 ## Command Line Usage
 
 ```bash
-dapr-actor-gen <openapi-file> <output-directory>
+dapr-actor-gen [flags] <openapi-file> <output-directory>
 ```
 
 ### Arguments
 
 - `openapi-file`: Path to your OpenAPI 3.0 specification file (YAML or JSON)
 - `output-directory`: Directory where generated code will be placed
+
+### Options
+
+- `--generate-impl`: Generate partial implementation stubs with not-implemented errors
+- `--generate-example`: Generate example main.go, go.mod and other files for a complete app
+
+### Usage Examples
+
+```bash
+# Generate interfaces only (default behavior)
+dapr-actor-gen openapi.yaml ./output
+
+# Generate interfaces + partial implementations
+dapr-actor-gen --generate-impl openapi.yaml ./output
+
+# Generate interfaces + example application
+dapr-actor-gen --generate-example openapi.yaml ./output
+
+# Generate everything together
+dapr-actor-gen --generate-impl --generate-example openapi.yaml ./output
+```
+
+#### Partial Implementation Generation (`--generate-impl`)
+
+Generates stub implementations alongside the existing API definitions. This creates `impl.go` files with method stubs that return not-implemented errors.
+
+#### Example Application Generation (`--generate-example`)
+
+Creates a complete, compilable Dapr application with `main.go` and `go.mod` that demonstrates how to register and use the generated actors.
 
 ### Generated File Structure
 

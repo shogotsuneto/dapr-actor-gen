@@ -89,3 +89,9 @@ type SingleActorTemplateData struct {
 	PackageName string
 	Actor       ActorInterface
 }
+
+// GenerationOptions represents options for controlling what gets generated
+type GenerationOptions struct {
+	GenerateImpl    bool // Generate partial implementation stubs
+	GenerateExample bool // Generate example main.go, go.mod, etc.
+}

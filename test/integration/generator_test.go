@@ -3,6 +3,7 @@ package integration
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -232,7 +233,11 @@ func TestGeneratorWithTestSpecs(t *testing.T) {
 			// Generate code using the intermediate model
 			gen := &generator.Generator{}
 			outputDir := filepath.Join("test-output", tt.name)
-			err = gen.GenerateActorPackages(model, outputDir)
+			options := generator.GenerationOptions{
+				GenerateImpl:    false,
+				GenerateExample: false,
+			}
+			err = gen.GenerateActorPackages(model, outputDir, options)
 			if err != nil {
 				t.Fatalf("Failed to generate actor packages: %v", err)
 			}
@@ -245,4 +250,92 @@ func TestGeneratorWithTestSpecs(t *testing.T) {
 			t.Logf("Successfully generated actor packages for %s", tt.name)
 		})
 	}
+}
+
+func TestGeneratorWithPartialImplementation(t *testing.T) {
+	// Load the multi-actor spec
+	loader := openapi3.NewLoader()
+	doc, err := loader.LoadFromFile("testdata/multi-actor.yaml")
+	if err != nil {
+		t.Fatalf("Failed to load OpenAPI spec: %v", err)
+	}
+
+	p := parser.NewOpenAPIParser(doc)
+	model, err := p.Parse()
+	if err != nil {
+		t.Fatalf("Failed to parse OpenAPI spec: %v", err)
+	}
+
+	// Generate with partial implementation
+	gen := &generator.Generator{}
+	outputDir := "test-output/partial-impl"
+	options := generator.GenerationOptions{
+		GenerateImpl:    true,
+		GenerateExample: false,
+	}
+	err = gen.GenerateActorPackages(model, outputDir, options)
+	if err != nil {
+		t.Fatalf("Failed to generate actor packages with impl: %v", err)
+	}
+
+	// Clean up after test
+	defer func() {
+		os.RemoveAll(outputDir)
+	}()
+
+	// Verify impl.go files exist
+	for _, actor := range model.Actors {
+		packageName := strings.ToLower(actor.ActorType)
+		implFile := filepath.Join(outputDir, packageName, "impl.go")
+		if _, err := os.Stat(implFile); os.IsNotExist(err) {
+			t.Errorf("Expected impl.go file not found: %s", implFile)
+		}
+	}
+
+	t.Logf("Successfully generated actor packages with partial implementation")
+}
+
+func TestGeneratorWithExampleApplication(t *testing.T) {
+	// Load the multi-actor spec
+	loader := openapi3.NewLoader()
+	doc, err := loader.LoadFromFile("testdata/multi-actor.yaml")
+	if err != nil {
+		t.Fatalf("Failed to load OpenAPI spec: %v", err)
+	}
+
+	p := parser.NewOpenAPIParser(doc)
+	model, err := p.Parse()
+	if err != nil {
+		t.Fatalf("Failed to parse OpenAPI spec: %v", err)
+	}
+
+	// Generate with example application
+	gen := &generator.Generator{}
+	outputDir := "test-output/example-app"
+	options := generator.GenerationOptions{
+		GenerateImpl:    false,
+		GenerateExample: true,
+	}
+	err = gen.GenerateActorPackages(model, outputDir, options)
+	if err != nil {
+		t.Fatalf("Failed to generate actor packages with example: %v", err)
+	}
+
+	// Clean up after test
+	defer func() {
+		os.RemoveAll(outputDir)
+	}()
+
+	// Verify example files exist
+	mainFile := filepath.Join(outputDir, "main.go")
+	if _, err := os.Stat(mainFile); os.IsNotExist(err) {
+		t.Errorf("Expected main.go file not found: %s", mainFile)
+	}
+
+	goModFile := filepath.Join(outputDir, "go.mod")
+	if _, err := os.Stat(goModFile); os.IsNotExist(err) {
+		t.Errorf("Expected go.mod file not found: %s", goModFile)
+	}
+
+	t.Logf("Successfully generated actor packages with example application")
 }

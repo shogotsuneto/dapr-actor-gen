@@ -2,6 +2,7 @@ package generator
 
 import (
 	"embed"
+	"strings"
 	"text/template"
 )
 
@@ -10,5 +11,10 @@ var templatesFS embed.FS
 
 // getEmbeddedTemplate loads a template from the embedded filesystem
 func getEmbeddedTemplate(templateName string) (*template.Template, error) {
-	return template.ParseFS(templatesFS, "templates/"+templateName)
+	// Create template with helper functions
+	tmpl := template.New(templateName).Funcs(template.FuncMap{
+		"ToLower": strings.ToLower,
+	})
+	
+	return tmpl.ParseFS(templatesFS, "templates/"+templateName)
 }
