@@ -67,6 +67,7 @@ This example demonstrates:
 
 ```bash
 # Create/get counter (returns 0 initially)
+# Note: First-time calls to new actors automatically initialize with default values
 curl -X GET http://localhost:3500/v1.0/actors/Counter/my-counter/method/Get
 
 # Increment counter
@@ -156,5 +157,36 @@ This example shows how to:
 3. Implement different actor patterns (state-based vs event-sourced)
 4. Handle validation, errors, and edge cases
 5. Create production-ready actor implementations
+
+## Troubleshooting
+
+### State Manager Nil Pointer Issues
+
+If you encounter nil pointer dereference errors related to the state manager, this typically happens when:
+
+1. **First-time actor calls**: New actors may not have their state manager fully initialized
+2. **Concurrency issues**: Multiple simultaneous calls to a new actor
+
+**Solution**: The implementations include null checks for the state manager:
+
+```go
+// Check if state manager is available
+stateManager := a.GetStateManager()
+if stateManager == nil {
+    // Handle gracefully - return default values or appropriate errors
+    return 0, nil
+}
+```
+
+### Common Error Patterns
+
+- **EOF errors**: Usually indicate Dapr sidecar connectivity issues
+- **Actor not found**: Make sure the actor type is properly registered
+- **State retrieval failures**: New actors return default values rather than errors
+
+### Expected Responses
+
+- **New Counter**: `{"value": 0}` (default state)
+- **New BankAccount**: `{"balance": 0, "isActive": false}` (uninitialized account)
 
 Compare the implemented files with the stub versions to understand the progression from generated code to working applications.

@@ -27,9 +27,19 @@ func (a *Counter) Type() string {
 // getCurrentValue retrieves the current counter value from actor state
 func (a *Counter) getCurrentValue(ctx context.Context) (int32, error) {
 	var value int32
-	err := a.GetStateManager().Get(ctx, stateKeyValue, &value)
+	
+	// Check if state manager is available
+	stateManager := a.GetStateManager()
+	if stateManager == nil {
+		// If state manager is not available, return default value
+		return 0, nil
+	}
+	
+	err := stateManager.Get(ctx, stateKeyValue, &value)
 	if err != nil {
-		return 0, fmt.Errorf("failed to get counter state: %w", err)
+		// If state doesn't exist yet, return default value of 0
+		// This is common for newly created actors
+		return 0, nil
 	}
 	
 	return value, nil
@@ -37,11 +47,16 @@ func (a *Counter) getCurrentValue(ctx context.Context) (int32, error) {
 
 // saveValue saves the counter value to actor state
 func (a *Counter) saveValue(ctx context.Context, value int32) error {
-	if err := a.GetStateManager().Set(ctx, stateKeyValue, value); err != nil {
+	stateManager := a.GetStateManager()
+	if stateManager == nil {
+		return fmt.Errorf("state manager not available")
+	}
+	
+	if err := stateManager.Set(ctx, stateKeyValue, value); err != nil {
 		return fmt.Errorf("failed to save counter state: %w", err)
 	}
 	
-	return a.GetStateManager().Save(ctx)
+	return stateManager.Save(ctx)
 }
 
 // Decrement decrements counter by 1

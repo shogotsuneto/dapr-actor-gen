@@ -45,7 +45,15 @@ func (a *BankAccount) Type() string {
 // getEvents retrieves all events from actor state
 func (a *BankAccount) getEvents(ctx context.Context) ([]AccountEvent, error) {
 	var events []AccountEvent
-	err := a.GetStateManager().Get(ctx, stateKeyEvents, &events)
+	
+	// Check if state manager is available
+	stateManager := a.GetStateManager()
+	if stateManager == nil {
+		// If state manager is not available, return empty events
+		return []AccountEvent{}, nil
+	}
+	
+	err := stateManager.Get(ctx, stateKeyEvents, &events)
 	if err != nil {
 		return []AccountEvent{}, nil // Return empty if no events exist yet
 	}
@@ -69,11 +77,16 @@ func (a *BankAccount) appendEvent(ctx context.Context, eventType string, eventDa
 	
 	events = append(events, event)
 	
-	if err := a.GetStateManager().Set(ctx, stateKeyEvents, events); err != nil {
+	stateManager := a.GetStateManager()
+	if stateManager == nil {
+		return fmt.Errorf("state manager not available")
+	}
+	
+	if err := stateManager.Set(ctx, stateKeyEvents, events); err != nil {
 		return fmt.Errorf("failed to save events state: %w", err)
 	}
 	
-	return a.GetStateManager().Save(ctx)
+	return stateManager.Save(ctx)
 }
 
 // computeCurrentState computes the current account state from all events
