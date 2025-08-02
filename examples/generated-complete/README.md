@@ -34,8 +34,8 @@ This example demonstrates:
   - `Increment()` - Adds 1 to counter
   - `Decrement()` - Subtracts 1 from counter  
   - `Set(value)` - Sets counter to specific value
-- **State Management**: Stores a simple `int32` value using `StateManagerContext`
-- **Default Value**: Returns 0 when no state exists
+- **Storage**: In-memory storage with thread-safe access using sync.RWMutex
+- **Default Value**: Returns 0 when newly created
 
 ### BankAccount Actor (`bankaccount/impl.go`)
 - **Pattern**: Event-sourced actor
@@ -45,7 +45,7 @@ This example demonstrates:
   - `Withdraw(amount, description)` - Withdraws money (with balance validation)
   - `GetBalance()` - Returns computed current state
   - `GetHistory()` - Returns complete transaction history
-- **State Management**: Stores events and computes current state from event history
+- **Storage**: In-memory event storage with thread-safe access using sync.RWMutex
 - **Event Types**: `AccountCreated`, `MoneyDeposited`, `MoneyWithdrawn`
 
 ## Running the Example
@@ -109,16 +109,21 @@ curl -X GET http://localhost:3500/v1.0/actors/BankAccount/account-123/method/Get
 
 ## Key Implementation Patterns
 
-### State Management
-Both actors use `a.GetStateManager()` to interact with Dapr's state store:
-- `Set(ctx, key, value)` - Store value
-- `Get(ctx, key, &variable)` - Retrieve value into variable
-- `Save(ctx)` - Persist changes
+### In-Memory Storage
+Both actors use in-memory storage for simplicity and self-contained operation:
+- **Counter**: Thread-safe `int32` value protected by `sync.RWMutex`
+- **BankAccount**: Thread-safe event slice protected by `sync.RWMutex`
+- **Concurrency**: Proper locking ensures data consistency across concurrent requests
 
 ### Error Handling
 - Input validation (positive amounts, required fields)
 - Business rule validation (sufficient funds for withdrawals)
-- State operation error handling
+- Thread-safe access to shared data
+
+### Actor Lifecycle
+- **Instance Creation**: Each actor ID gets its own in-memory storage
+- **Data Persistence**: Data persists for the lifetime of the actor instance
+- **State Reset**: Restarting the application resets all actor state
 
 ### Actor ID Access
 Use `a.ID()` to get the current actor instance ID.
@@ -135,15 +140,9 @@ func (a *Counter) Increment(ctx context.Context) (*CounterState, error) {
 The working implementation shows:
 ```go
 func (a *Counter) Increment(ctx context.Context) (*CounterState, error) {
-    currentValue, err := a.getCurrentValue(ctx)
-    if err != nil {
-        return nil, err
-    }
-    
+    currentValue := a.getCurrentValue(ctx)
     newValue := currentValue + 1
-    if err := a.saveValue(ctx, newValue); err != nil {
-        return nil, err
-    }
+    a.setValue(ctx, newValue)
     
     return &CounterState{Value: newValue}, nil
 }
@@ -153,40 +152,29 @@ func (a *Counter) Increment(ctx context.Context) (*CounterState, error) {
 
 This example shows how to:
 1. Take generated stub implementations
-2. Add real business logic using Dapr APIs
+2. Add real business logic using in-memory storage
 3. Implement different actor patterns (state-based vs event-sourced)
 4. Handle validation, errors, and edge cases
-5. Create production-ready actor implementations
+5. Ensure thread-safe concurrent access
+6. Create self-contained actor implementations
 
 ## Troubleshooting
 
-### State Manager Nil Pointer Issues
+### Common Issues
 
-If you encounter nil pointer dereference errors related to the state manager, this typically happens when:
-
-1. **First-time actor calls**: New actors may not have their state manager fully initialized
-2. **Concurrency issues**: Multiple simultaneous calls to a new actor
-
-**Solution**: The implementations include null checks for the state manager:
-
-```go
-// Check if state manager is available
-stateManager := a.GetStateManager()
-if stateManager == nil {
-    // Handle gracefully - return default values or appropriate errors
-    return 0, nil
-}
-```
-
-### Common Error Patterns
-
-- **EOF errors**: Usually indicate Dapr sidecar connectivity issues
-- **Actor not found**: Make sure the actor type is properly registered
-- **State retrieval failures**: New actors return default values rather than errors
+- **EOF errors**: Usually indicate Dapr sidecar connectivity issues - make sure Dapr sidecar is running
+- **Actor not found**: Make sure the actor type is properly registered in main.go
+- **Concurrent access**: In-memory storage is thread-safe using mutexes
 
 ### Expected Responses
 
 - **New Counter**: `{"value": 0}` (default state)
-- **New BankAccount**: `{"balance": 0, "isActive": false}` (uninitialized account)
+- **New BankAccount**: Error "account not found - no events exist" until `CreateAccount` is called
+
+### Data Persistence Notes
+
+- **Actor lifetime**: Data persists for the lifetime of each actor instance
+- **Application restart**: All actor state is reset when the application restarts
+- **Production use**: For persistent storage, consider using Dapr state management components
 
 Compare the implemented files with the stub versions to understand the progression from generated code to working applications.

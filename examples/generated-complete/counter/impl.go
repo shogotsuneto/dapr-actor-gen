@@ -7,16 +7,16 @@ package counter
 
 import (
 	"context"
-	"fmt"
+	"sync"
 	"github.com/dapr/go-sdk/actor"
 )
 
-const stateKeyValue = "value"
-
 // Counter is a working implementation of CounterAPI.
-// This implementation demonstrates state-based actor patterns with Dapr state management.
+// This implementation demonstrates state-based actor patterns with in-memory storage.
 type Counter struct {
 	actor.ServerImplBaseCtx
+	mu    sync.RWMutex // Protects value from concurrent access
+	value int32        // In-memory counter value
 }
 
 // Type returns the actor type for Dapr registration
@@ -24,85 +24,46 @@ func (a *Counter) Type() string {
 	return ActorTypeCounter
 }
 
-// getCurrentValue retrieves the current counter value from actor state
-func (a *Counter) getCurrentValue(ctx context.Context) (int32, error) {
-	var value int32
-	
-	// Check if state manager is available
-	stateManager := a.GetStateManager()
-	if stateManager == nil {
-		return 0, fmt.Errorf("state manager not available")
-	}
-	
-	err := stateManager.Get(ctx, stateKeyValue, &value)
-	if err != nil {
-		// If state doesn't exist yet, return default value of 0
-		// This is common for newly created actors
-		return 0, nil
-	}
-	
-	return value, nil
+// getCurrentValue retrieves the current counter value from in-memory storage
+func (a *Counter) getCurrentValue(ctx context.Context) int32 {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	return a.value
 }
 
-// saveValue saves the counter value to actor state
-func (a *Counter) saveValue(ctx context.Context, value int32) error {
-	stateManager := a.GetStateManager()
-	if stateManager == nil {
-		return fmt.Errorf("state manager not available")
-	}
-	
-	if err := stateManager.Set(ctx, stateKeyValue, value); err != nil {
-		return fmt.Errorf("failed to save counter state: %w", err)
-	}
-	
-	return stateManager.Save(ctx)
+// setValue saves the counter value to in-memory storage
+func (a *Counter) setValue(ctx context.Context, value int32) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.value = value
 }
 
 // Decrement decrements counter by 1
 func (a *Counter) Decrement(ctx context.Context) (*CounterState, error) {
-	currentValue, err := a.getCurrentValue(ctx)
-	if err != nil {
-		return nil, err
-	}
-	
+	currentValue := a.getCurrentValue(ctx)
 	newValue := currentValue - 1
-	if err := a.saveValue(ctx, newValue); err != nil {
-		return nil, err
-	}
+	a.setValue(ctx, newValue)
 	
 	return &CounterState{Value: newValue}, nil
 }
 
 // Get gets current counter value
 func (a *Counter) Get(ctx context.Context) (*CounterState, error) {
-	value, err := a.getCurrentValue(ctx)
-	if err != nil {
-		return nil, err
-	}
-	
+	value := a.getCurrentValue(ctx)
 	return &CounterState{Value: value}, nil
 }
 
 // Increment increments counter by 1
 func (a *Counter) Increment(ctx context.Context) (*CounterState, error) {
-	currentValue, err := a.getCurrentValue(ctx)
-	if err != nil {
-		return nil, err
-	}
-	
+	currentValue := a.getCurrentValue(ctx)
 	newValue := currentValue + 1
-	if err := a.saveValue(ctx, newValue); err != nil {
-		return nil, err
-	}
+	a.setValue(ctx, newValue)
 	
 	return &CounterState{Value: newValue}, nil
 }
 
 // Set sets counter to specific value
 func (a *Counter) Set(ctx context.Context, request SetValueRequest) (*CounterState, error) {
-	if err := a.saveValue(ctx, request.Value); err != nil {
-		return nil, err
-	}
-	
+	a.setValue(ctx, request.Value)
 	return &CounterState{Value: request.Value}, nil
 }

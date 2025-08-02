@@ -8,15 +8,13 @@ package bankaccount
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 	"github.com/dapr/go-sdk/actor"
 	"github.com/google/uuid"
 )
 
 const (
-	stateKeyEvents = "events"
-	stateKeyAccount = "account"
-	
 	// Event types
 	EventTypeAccountCreated = "AccountCreated"
 	EventTypeMoneyDeposited = "MoneyDeposited"
@@ -32,9 +30,11 @@ type AccountEvent struct {
 }
 
 // BankAccount is a working implementation of BankAccountAPI using event sourcing patterns.
-// This implementation demonstrates event-sourced actor patterns with complete audit trails.
+// This implementation demonstrates event-sourced actor patterns with in-memory storage.
 type BankAccount struct {
 	actor.ServerImplBaseCtx
+	mu     sync.RWMutex   // Protects events from concurrent access
+	events []AccountEvent // In-memory event storage
 }
 
 // Type returns the actor type for Dapr registration
@@ -42,30 +42,21 @@ func (a *BankAccount) Type() string {
 	return ActorTypeBankAccount
 }
 
-// getEvents retrieves all events from actor state
-func (a *BankAccount) getEvents(ctx context.Context) ([]AccountEvent, error) {
-	var events []AccountEvent
+// getEvents retrieves all events from in-memory storage
+func (a *BankAccount) getEvents(ctx context.Context) []AccountEvent {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
 	
-	// Check if state manager is available
-	stateManager := a.GetStateManager()
-	if stateManager == nil {
-		return nil, fmt.Errorf("state manager not available")
-	}
-	
-	err := stateManager.Get(ctx, stateKeyEvents, &events)
-	if err != nil {
-		return []AccountEvent{}, nil // Return empty if no events exist yet
-	}
-	
-	return events, nil
+	// Return a copy to prevent external modification
+	eventsCopy := make([]AccountEvent, len(a.events))
+	copy(eventsCopy, a.events)
+	return eventsCopy
 }
 
-// appendEvent adds a new event and updates the stored events
-func (a *BankAccount) appendEvent(ctx context.Context, eventType string, eventData map[string]interface{}) error {
-	events, err := a.getEvents(ctx)
-	if err != nil {
-		return err
-	}
+// appendEvent adds a new event to in-memory storage
+func (a *BankAccount) appendEvent(ctx context.Context, eventType string, eventData map[string]interface{}) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
 	
 	event := AccountEvent{
 		EventID:   uuid.New().String(),
@@ -74,26 +65,12 @@ func (a *BankAccount) appendEvent(ctx context.Context, eventType string, eventDa
 		Data:      eventData,
 	}
 	
-	events = append(events, event)
-	
-	stateManager := a.GetStateManager()
-	if stateManager == nil {
-		return fmt.Errorf("state manager not available")
-	}
-	
-	if err := stateManager.Set(ctx, stateKeyEvents, events); err != nil {
-		return fmt.Errorf("failed to save events state: %w", err)
-	}
-	
-	return stateManager.Save(ctx)
+	a.events = append(a.events, event)
 }
 
 // computeCurrentState computes the current account state from all events
 func (a *BankAccount) computeCurrentState(ctx context.Context) (*BankAccountState, error) {
-	events, err := a.getEvents(ctx)
-	if err != nil {
-		return nil, err
-	}
+	events := a.getEvents(ctx)
 	
 	if len(events) == 0 {
 		return nil, fmt.Errorf("account not found - no events exist")
@@ -132,10 +109,7 @@ func (a *BankAccount) computeCurrentState(ctx context.Context) (*BankAccountStat
 // CreateAccount creates a new bank account
 func (a *BankAccount) CreateAccount(ctx context.Context, request CreateAccountRequest) (*BankAccountState, error) {
 	// Check if account already exists
-	events, err := a.getEvents(ctx)
-	if err != nil {
-		return nil, err
-	}
+	events := a.getEvents(ctx)
 	
 	if len(events) > 0 {
 		return nil, fmt.Errorf("account already exists")
@@ -154,9 +128,7 @@ func (a *BankAccount) CreateAccount(ctx context.Context, request CreateAccountRe
 		"initialDeposit": request.InitialDeposit,
 	}
 	
-	if err := a.appendEvent(ctx, EventTypeAccountCreated, eventData); err != nil {
-		return nil, err
-	}
+	a.appendEvent(ctx, EventTypeAccountCreated, eventData)
 	
 	return a.computeCurrentState(ctx)
 }
@@ -173,9 +145,7 @@ func (a *BankAccount) Deposit(ctx context.Context, request DepositRequest) (*Ban
 		"description": request.Description,
 	}
 	
-	if err := a.appendEvent(ctx, EventTypeMoneyDeposited, eventData); err != nil {
-		return nil, err
-	}
+	a.appendEvent(ctx, EventTypeMoneyDeposited, eventData)
 	
 	return a.computeCurrentState(ctx)
 }
@@ -187,10 +157,7 @@ func (a *BankAccount) GetBalance(ctx context.Context) (*BankAccountState, error)
 
 // GetHistory gets transaction history
 func (a *BankAccount) GetHistory(ctx context.Context) (*TransactionHistory, error) {
-	events, err := a.getEvents(ctx)
-	if err != nil {
-		return nil, err
-	}
+	events := a.getEvents(ctx)
 	
 	// Convert AccountEvent to interface{} for the response
 	interfaceEvents := make([]interface{}, len(events))
@@ -227,9 +194,7 @@ func (a *BankAccount) Withdraw(ctx context.Context, request WithdrawRequest) (*B
 		"description": request.Description,
 	}
 	
-	if err := a.appendEvent(ctx, EventTypeMoneyWithdrawn, eventData); err != nil {
-		return nil, err
-	}
+	a.appendEvent(ctx, EventTypeMoneyWithdrawn, eventData)
 	
 	return a.computeCurrentState(ctx)
 }
