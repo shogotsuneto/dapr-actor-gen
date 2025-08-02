@@ -49,8 +49,7 @@ func (a *BankAccount) getEvents(ctx context.Context) ([]AccountEvent, error) {
 	// Check if state manager is available
 	stateManager := a.GetStateManager()
 	if stateManager == nil {
-		// If state manager is not available, return empty events
-		return []AccountEvent{}, nil
+		return nil, fmt.Errorf("state manager not available")
 	}
 	
 	err := stateManager.Get(ctx, stateKeyEvents, &events)

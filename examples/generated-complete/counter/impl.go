@@ -31,8 +31,7 @@ func (a *Counter) getCurrentValue(ctx context.Context) (int32, error) {
 	// Check if state manager is available
 	stateManager := a.GetStateManager()
 	if stateManager == nil {
-		// If state manager is not available, return default value
-		return 0, nil
+		return 0, fmt.Errorf("state manager not available")
 	}
 	
 	err := stateManager.Get(ctx, stateKeyValue, &value)
