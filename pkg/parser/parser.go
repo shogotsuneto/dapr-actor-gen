@@ -67,7 +67,7 @@ func (p *OpenAPIParser) parseTypes() (generator.TypeDefinitions, error) {
 	// Parse struct types and type aliases from schemas
 	for name, schemaRef := range p.doc.Components.Schemas {
 		schema := schemaRef.Value
-		
+
 		// Check if this should be a type alias (simple type without properties or with only basic properties)
 		if !schema.Type.Is("object") || schema.Properties == nil || len(schema.Properties) == 0 {
 			// This should be a type alias
@@ -81,10 +81,10 @@ func (p *OpenAPIParser) parseTypes() (generator.TypeDefinitions, error) {
 		} else if schema.Type.Is("object") && schema.Properties != nil {
 			// Generate struct type
 			fields := []generator.Field{}
-			
+
 			for propName, propRef := range schema.Properties {
 				prop := propRef.Value
-				
+
 				// Check if this property is a reference to another schema
 				var goType string
 				if propRef.Ref != "" {
@@ -98,7 +98,7 @@ func (p *OpenAPIParser) parseTypes() (generator.TypeDefinitions, error) {
 				} else {
 					goType = getGoType(prop)
 				}
-				
+
 				jsonTag := propName
 				if !contains(schema.Required, propName) {
 					jsonTag += ",omitempty"
@@ -363,7 +363,7 @@ func (p *OpenAPIParser) extractActorTypeFromPath(path string) string {
 	if len(parts) < 4 || parts[0] != "" { // paths should start with /
 		return ""
 	}
-	
+
 	// Find the position of "method" in the path
 	methodIndex := -1
 	for i, part := range parts {
@@ -372,13 +372,13 @@ func (p *OpenAPIParser) extractActorTypeFromPath(path string) string {
 			break
 		}
 	}
-	
+
 	// generator.Actor type should be 2 positions before "method"
 	// .../actorType/{actorId}/method/methodName
 	if methodIndex >= 2 {
 		return parts[methodIndex-2]
 	}
-	
+
 	return ""
 }
 
@@ -404,7 +404,7 @@ func (p *OpenAPIParser) extractReturnType(op *openapi3.Operation) string {
 					return parts[len(parts)-1]
 				}
 			}
-			
+
 			schema := jsonContent.Schema.Value
 			if schema != nil {
 				// Handle array schemas with items.$ref
@@ -430,25 +430,25 @@ func (p *OpenAPIParser) isCustomTypeInDefinitions(typeName string, types generat
 		"float32": true, "float64": true, "bool": true,
 		"interface{}": true, "map[string]interface{}": true,
 	}
-	
+
 	if builtinTypes[typeName] {
 		return false
 	}
-	
+
 	// Check if it's defined in our struct types
 	for _, structType := range types.Structs {
 		if structType.Name == typeName {
 			return true
 		}
 	}
-	
+
 	// Check if it's defined in our type aliases
 	for _, aliasType := range types.Aliases {
 		if aliasType.Name == typeName {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -457,7 +457,7 @@ func (p *OpenAPIParser) isCustomTypeInDefinitions(typeName string, types generat
 func (p *OpenAPIParser) categorizeTypesIntoActors(model *generator.GenerationModel, allTypes generator.TypeDefinitions) error {
 	// Create a map to track which types are used by which actors
 	typeUsage := make(map[string]map[string]bool) // type -> actor -> used
-	
+
 	// Initialize usage map for all types (both structs and aliases)
 	for _, structType := range allTypes.Structs {
 		typeUsage[structType.Name] = make(map[string]bool)
@@ -465,7 +465,7 @@ func (p *OpenAPIParser) categorizeTypesIntoActors(model *generator.GenerationMod
 	for _, aliasType := range allTypes.Aliases {
 		typeUsage[aliasType.Name] = make(map[string]bool)
 	}
-	
+
 	// Analyze which actors use which types by examining request/response schemas
 	for _, actor := range model.Actors {
 		for _, method := range actor.Methods {
@@ -486,8 +486,8 @@ func (p *OpenAPIParser) categorizeTypesIntoActors(model *generator.GenerationMod
 			}
 		}
 	}
-	
-	// Also analyze type dependencies - if a type references another type, 
+
+	// Also analyze type dependencies - if a type references another type,
 	// the referenced type should also be included in actors that use the referencing type
 	typeDependencies := make(map[string][]string) // type -> []referenced_types
 	for _, structType := range allTypes.Structs {
@@ -496,14 +496,14 @@ func (p *OpenAPIParser) categorizeTypesIntoActors(model *generator.GenerationMod
 			fieldType := field.Type
 			fieldType = strings.TrimPrefix(fieldType, "[]")
 			fieldType = strings.TrimPrefix(fieldType, "*")
-			
+
 			// Check if this is a custom type (not a built-in Go type)
 			if p.isCustomTypeInDefinitions(fieldType, allTypes) {
 				typeDependencies[structType.Name] = append(typeDependencies[structType.Name], fieldType)
 			}
 		}
 	}
-	
+
 	// Propagate usage from dependent types
 	for parentType, dependencies := range typeDependencies {
 		if parentUsage, exists := typeUsage[parentType]; exists {
@@ -527,11 +527,11 @@ func (p *OpenAPIParser) categorizeTypesIntoActors(model *generator.GenerationMod
 			Aliases: []generator.TypeAlias{},
 		}
 	}
-	
+
 	// Assign struct types directly to each actor that uses them
 	for _, structType := range allTypes.Structs {
 		usedByActors := typeUsage[structType.Name]
-		
+
 		// Assign to each actor that uses this type
 		for actorType := range usedByActors {
 			// Find the actor and add the type to it
@@ -547,7 +547,7 @@ func (p *OpenAPIParser) categorizeTypesIntoActors(model *generator.GenerationMod
 	// Assign type aliases directly to each actor that uses them
 	for _, aliasType := range allTypes.Aliases {
 		usedByActors := typeUsage[aliasType.Name]
-		
+
 		// Assign to each actor that uses this type
 		for actorType := range usedByActors {
 			// Find the actor and add the type to it
@@ -559,7 +559,7 @@ func (p *OpenAPIParser) categorizeTypesIntoActors(model *generator.GenerationMod
 			}
 		}
 	}
-	
+
 	// Sort types within each actor for consistent ordering
 	for i := range model.Actors {
 		sort.Slice(model.Actors[i].Types.Structs, func(j, k int) bool {
@@ -569,6 +569,6 @@ func (p *OpenAPIParser) categorizeTypesIntoActors(model *generator.GenerationMod
 			return model.Actors[i].Types.Aliases[j].Name < model.Actors[i].Types.Aliases[k].Name
 		})
 	}
-	
+
 	return nil
 }

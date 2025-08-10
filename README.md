@@ -131,13 +131,12 @@ info:
   version: 1.0.0
 
 paths:
-  # Actor methods are defined as paths
-  /counter/{id}/increment:
+  # Actor methods follow the pattern: /{actorType}/{actorId}/method/{methodName}
+  /Counter/{actorId}/method/Increment:
     post:
-      operationId: increment
-      x-actor-type: counter      # Required: specifies the actor type
+      summary: Increment counter by 1
       parameters:
-        - name: id
+        - name: actorId
           in: path
           required: true
           schema:
@@ -155,14 +154,15 @@ components:
     CounterState:
       type: object
       properties:
-        count:
+        value:
           type: integer
 ```
 
 Key requirements:
-- Use `x-actor-type` extension to specify which actor type the method belongs to
-- Actor ID should be a path parameter named `id`
-- Method names come from `operationId`
+- Paths must follow the pattern: `/{actorType}/{actorId}/method/{methodName}`
+- Actor type is extracted from the path (e.g., "Counter" from `/Counter/{actorId}/method/Increment`)
+- Actor ID should be a path parameter (typically named `actorId`)
+- Method names are extracted from the path after `/method/`
 - Request/response schemas become Go types
 
 ## Examples
