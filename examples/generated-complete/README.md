@@ -48,6 +48,55 @@ This example demonstrates:
 - **Storage**: In-memory event storage with thread-safe access using sync.RWMutex
 - **Event Types**: `AccountCreated`, `MoneyDeposited`, `MoneyWithdrawn`
 
+## Middleware and Chi Router
+
+This example now demonstrates how to use **Chi router explicitly** with **custom middleware** in a Dapr actor application.
+
+### Middleware Features
+
+The `main.go` file shows how to:
+
+1. **Use Chi router explicitly** with `daprd.NewServiceWithMux()` instead of the default router
+2. **Add built-in Chi middleware**:
+   - `middleware.Logger` - Logs all HTTP requests with response times
+   - `middleware.Recoverer` - Recovers from panics and returns 500 status
+   - `middleware.RequestID` - Adds X-Request-Id header to responses
+   - `middleware.RealIP` - Sets the real IP address from X-Forwarded-For headers
+
+3. **Add custom middleware**:
+   - `headerLoggingMiddleware` - **Logs all HTTP headers** from incoming requests for debugging
+   - `contextEnrichmentMiddleware` - **Adds custom values to request context** that actors can access
+
+### Custom Context Values
+
+The middleware adds these values to the request context:
+- **RequestID**: Unique identifier for each request (timestamp-based)
+- **UserInfo**: Map containing user, role, and timestamp information
+
+### Actor Context Usage
+
+The **Counter actor** (`counter/impl.go`) demonstrates how to:
+- **Retrieve context values** set by middleware using `ctx.Value(key)`
+- **Log context information** in actor methods (`Get`, `Increment`)
+- **Access middleware-provided data** within actor business logic
+
+### Example Output
+
+When making requests to the actors, you'll see logs like:
+```
+=== HTTP Headers for POST /actors/Counter/my-counter/method/Increment ===
+Header: Content-Type: application/json
+Header: User-Agent: curl/7.64.1
+Header: X-Custom-Header: my-value
+=== End Headers ===
+Context enriched with RequestID: 20241201-143022.123
+[Counter] Operation: Increment, RequestID: 20241201-143022.123
+[Counter] Operation: Increment, User: example-user, Role: actor-service, Timestamp: 2024-12-01T14:30:22Z
+[Counter] Incremented from 0 to 1
+```
+
+This demonstrates the complete flow from middleware → context → actor usage.
+
 ## Running the Example
 
 1. **Start Dapr sidecar**:
