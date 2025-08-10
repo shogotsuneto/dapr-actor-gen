@@ -7,34 +7,15 @@ package bankaccount
 
 import (
 	"context"
-	"fmt"
-	"sync"
-	"time"
+	"errors"
 	"github.com/dapr/go-sdk/actor"
-	"github.com/google/uuid"
 )
 
-const (
-	// Event types
-	EventTypeAccountCreated = "AccountCreated"
-	EventTypeMoneyDeposited = "MoneyDeposited"
-	EventTypeMoneyWithdrawn = "MoneyWithdrawn"
-)
-
-// AccountEvent represents a single account event for event sourcing
-type AccountEvent struct {
-	EventID   string                 `json:"eventId"`
-	EventType string                 `json:"eventType"`
-	Timestamp string                 `json:"timestamp"`
-	Data      map[string]interface{} `json:"data"`
-}
-
-// BankAccount is a working implementation of BankAccountAPI using event sourcing patterns.
-// This implementation demonstrates event-sourced actor patterns with in-memory storage.
+// BankAccount is a partial implementation of BankAccountAPI.
+// This is a stub implementation with methods that return not-implemented errors.
+// You should implement the actual business logic for each method.
 type BankAccount struct {
 	actor.ServerImplBaseCtx
-	mu     sync.RWMutex   // Protects events from concurrent access
-	events []AccountEvent // In-memory event storage
 }
 
 // Type returns the actor type for Dapr registration
@@ -42,159 +23,39 @@ func (a *BankAccount) Type() string {
 	return ActorTypeBankAccount
 }
 
-// getEvents retrieves all events from in-memory storage
-func (a *BankAccount) getEvents(ctx context.Context) []AccountEvent {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
-	
-	// Return a copy to prevent external modification
-	eventsCopy := make([]AccountEvent, len(a.events))
-	copy(eventsCopy, a.events)
-	return eventsCopy
-}
 
-// appendEvent adds a new event to in-memory storage
-func (a *BankAccount) appendEvent(ctx context.Context, eventType string, eventData map[string]interface{}) {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	
-	event := AccountEvent{
-		EventID:   uuid.New().String(),
-		EventType: eventType,
-		Timestamp: time.Now().Format(time.RFC3339),
-		Data:      eventData,
-	}
-	
-	a.events = append(a.events, event)
-}
-
-// computeCurrentState computes the current account state from all events
-func (a *BankAccount) computeCurrentState(ctx context.Context) (*BankAccountState, error) {
-	events := a.getEvents(ctx)
-	
-	if len(events) == 0 {
-		return nil, fmt.Errorf("account not found - no events exist")
-	}
-	
-	var state BankAccountState
-	state.IsActive = true
-	
-	for _, event := range events {
-		switch event.EventType {
-		case EventTypeAccountCreated:
-			state.AccountId = a.ID()
-			if ownerName, ok := event.Data["ownerName"].(string); ok {
-				state.OwnerName = ownerName
-			}
-			if initialDeposit, ok := event.Data["initialDeposit"].(float64); ok {
-				state.Balance = initialDeposit
-			}
-			state.CreatedAt = event.Timestamp
-			
-		case EventTypeMoneyDeposited:
-			if amount, ok := event.Data["amount"].(float64); ok {
-				state.Balance += amount
-			}
-			
-		case EventTypeMoneyWithdrawn:
-			if amount, ok := event.Data["amount"].(float64); ok {
-				state.Balance -= amount
-			}
-		}
-	}
-	
-	return &state, nil
-}
-
-// CreateAccount creates a new bank account
+// CreateAccount Create new bank account with currency and initial status
+// TODO: Implement the actual business logic for this method
 func (a *BankAccount) CreateAccount(ctx context.Context, request CreateAccountRequest) (*BankAccountState, error) {
-	// Check if account already exists
-	events := a.getEvents(ctx)
-	
-	if len(events) > 0 {
-		return nil, fmt.Errorf("account already exists")
-	}
-	
-	// Validate request
-	if request.OwnerName == "" {
-		return nil, fmt.Errorf("owner name is required")
-	}
-	if request.InitialDeposit < 0 {
-		return nil, fmt.Errorf("initial deposit cannot be negative")
-	}
-	
-	eventData := map[string]interface{}{
-		"ownerName":      request.OwnerName,
-		"initialDeposit": request.InitialDeposit,
-	}
-	
-	a.appendEvent(ctx, EventTypeAccountCreated, eventData)
-	
-	return a.computeCurrentState(ctx)
+	return nil, errors.New("CreateAccount method is not implemented")
 }
 
-// Deposit deposits money to account
+// Deposit Deposit money with transaction type
+// TODO: Implement the actual business logic for this method
 func (a *BankAccount) Deposit(ctx context.Context, request DepositRequest) (*BankAccountState, error) {
-	// Validate request
-	if request.Amount <= 0 {
-		return nil, fmt.Errorf("deposit amount must be positive")
-	}
-	
-	eventData := map[string]interface{}{
-		"amount":      request.Amount,
-		"description": request.Description,
-	}
-	
-	a.appendEvent(ctx, EventTypeMoneyDeposited, eventData)
-	
-	return a.computeCurrentState(ctx)
+	return nil, errors.New("Deposit method is not implemented")
 }
 
-// GetBalance gets current account balance
+// GetBalance Get current account balance and status
+// TODO: Implement the actual business logic for this method
 func (a *BankAccount) GetBalance(ctx context.Context) (*BankAccountState, error) {
-	return a.computeCurrentState(ctx)
+	return nil, errors.New("GetBalance method is not implemented")
 }
 
-// GetHistory gets transaction history
-func (a *BankAccount) GetHistory(ctx context.Context) (*TransactionHistory, error) {
-	events := a.getEvents(ctx)
-	
-	// Convert AccountEvent to interface{} for the response
-	interfaceEvents := make([]interface{}, len(events))
-	for i, event := range events {
-		interfaceEvents[i] = event
-	}
-	
-	return &TransactionHistory{
-		AccountId: a.ID(),
-		Events:    interfaceEvents,
-	}, nil
+// GetTransactions Get transactions filtered by type
+// TODO: Implement the actual business logic for this method
+func (a *BankAccount) GetTransactions(ctx context.Context) (*TransactionHistory, error) {
+	return nil, errors.New("GetTransactions method is not implemented")
 }
 
-// Withdraw withdraws money from account
+// UpdateStatus Update account status
+// TODO: Implement the actual business logic for this method
+func (a *BankAccount) UpdateStatus(ctx context.Context, request UpdateStatusRequest) (*BankAccountState, error) {
+	return nil, errors.New("UpdateStatus method is not implemented")
+}
+
+// Withdraw Withdraw money with transaction type
+// TODO: Implement the actual business logic for this method
 func (a *BankAccount) Withdraw(ctx context.Context, request WithdrawRequest) (*BankAccountState, error) {
-	// Validate request
-	if request.Amount <= 0 {
-		return nil, fmt.Errorf("withdraw amount must be positive")
-	}
-	
-	// Check current balance
-	currentState, err := a.computeCurrentState(ctx)
-	if err != nil {
-		return nil, err
-	}
-	
-	if currentState.Balance < request.Amount {
-		return nil, fmt.Errorf("insufficient funds - current balance: %.2f, requested: %.2f", 
-			currentState.Balance, request.Amount)
-	}
-	
-	eventData := map[string]interface{}{
-		"amount":      request.Amount,
-		"description": request.Description,
-	}
-	
-	a.appendEvent(ctx, EventTypeMoneyWithdrawn, eventData)
-	
-	return a.computeCurrentState(ctx)
+	return nil, errors.New("Withdraw method is not implemented")
 }
