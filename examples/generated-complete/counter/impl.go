@@ -7,15 +7,16 @@ package counter
 
 import (
 	"context"
-	"errors"
+	"sync"
 	"github.com/dapr/go-sdk/actor"
 )
 
-// Counter is a partial implementation of CounterAPI.
-// This is a stub implementation with methods that return not-implemented errors.
-// You should implement the actual business logic for each method.
+// Counter is a working implementation of CounterAPI.
+// This implementation demonstrates state-based actor patterns with in-memory storage.
 type Counter struct {
 	actor.ServerImplBaseCtx
+	mu    sync.RWMutex // Protects value from concurrent access
+	value int32        // In-memory counter value
 }
 
 // Type returns the actor type for Dapr registration
@@ -23,27 +24,46 @@ func (a *Counter) Type() string {
 	return ActorTypeCounter
 }
 
+// getCurrentValue retrieves the current counter value from in-memory storage
+func (a *Counter) getCurrentValue(ctx context.Context) int32 {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	return a.value
+}
 
-// Decrement Decrement counter by 1
-// TODO: Implement the actual business logic for this method
+// setValue saves the counter value to in-memory storage
+func (a *Counter) setValue(ctx context.Context, value int32) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.value = value
+}
+
+// Decrement decrements counter by 1
 func (a *Counter) Decrement(ctx context.Context) (*CounterState, error) {
-	return nil, errors.New("Decrement method is not implemented")
+	currentValue := a.getCurrentValue(ctx)
+	newValue := currentValue - 1
+	a.setValue(ctx, newValue)
+	
+	return &CounterState{Value: newValue}, nil
 }
 
-// Get Get current counter value
-// TODO: Implement the actual business logic for this method
+// Get gets current counter value
 func (a *Counter) Get(ctx context.Context) (*CounterState, error) {
-	return nil, errors.New("Get method is not implemented")
+	value := a.getCurrentValue(ctx)
+	return &CounterState{Value: value}, nil
 }
 
-// Increment Increment counter by 1
-// TODO: Implement the actual business logic for this method
+// Increment increments counter by 1
 func (a *Counter) Increment(ctx context.Context) (*CounterState, error) {
-	return nil, errors.New("Increment method is not implemented")
+	currentValue := a.getCurrentValue(ctx)
+	newValue := currentValue + 1
+	a.setValue(ctx, newValue)
+	
+	return &CounterState{Value: newValue}, nil
 }
 
-// Set Set counter to specific value
-// TODO: Implement the actual business logic for this method
+// Set sets counter to specific value
 func (a *Counter) Set(ctx context.Context, request SetValueRequest) (*CounterState, error) {
-	return nil, errors.New("Set method is not implemented")
+	a.setValue(ctx, request.Value)
+	return &CounterState{Value: request.Value}, nil
 }
