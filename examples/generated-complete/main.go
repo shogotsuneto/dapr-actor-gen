@@ -1,21 +1,82 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	daprd "github.com/dapr/go-sdk/service/http"
 
 	"example-dapr-actors/bankaccount"
 	"example-dapr-actors/counter"
 )
 
+// Custom context key for middleware values
+type contextKey string
+
+const (
+	RequestIDKey contextKey = "requestID"
+	UserInfoKey  contextKey = "userInfo"
+)
+
+// headerLoggingMiddleware logs all HTTP headers from incoming requests
+func headerLoggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("=== HTTP Headers for %s %s ===", r.Method, r.URL.Path)
+		for name, values := range r.Header {
+			for _, value := range values {
+				log.Printf("Header: %s: %s", name, value)
+			}
+		}
+		log.Printf("=== End Headers ===")
+		next.ServeHTTP(w, r)
+	})
+}
+
+// contextEnrichmentMiddleware adds custom values to the request context
+func contextEnrichmentMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Add a request ID to context
+		requestID := time.Now().Format("20060102-150405.000")
+		ctx := context.WithValue(r.Context(), RequestIDKey, requestID)
+		
+		// Add some user info to context (simulated)
+		userInfo := map[string]string{
+			"user":      "example-user",
+			"role":      "actor-service",
+			"timestamp": time.Now().Format(time.RFC3339),
+		}
+		ctx = context.WithValue(ctx, UserInfoKey, userInfo)
+		
+		log.Printf("Context enriched with RequestID: %s", requestID)
+		
+		// Pass the enriched context to the next handler
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
 func main() {
-	// Create a Dapr service on port 8080
-	s := daprd.NewService(":8080")
+	// Create a Chi router with middleware
+	r := chi.NewRouter()
+	
+	// Add built-in Chi middleware
+	r.Use(middleware.Logger)      // Log requests
+	r.Use(middleware.Recoverer)   // Recover from panics
+	r.Use(middleware.RequestID)   // Add request ID header
+	r.Use(middleware.RealIP)      // Set real IP
+	
+	// Add our custom middleware
+	r.Use(headerLoggingMiddleware)     // Log HTTP headers
+	r.Use(contextEnrichmentMiddleware) // Enrich context with custom values
+	
+	// Create a Dapr service with our custom Chi router
+	s := daprd.NewServiceWithMux(":8080", r)
 
 	// Register all generated actors
 
@@ -37,7 +98,15 @@ func main() {
 	}()
 
 	// Start the service
-	log.Println("Starting Dapr actor service on :8080")
+	log.Println("Starting Dapr actor service with Chi router and custom middleware on :8080")
+	log.Println("Middleware enabled:")
+	log.Println("- Logger: logs all HTTP requests")
+	log.Println("- Recoverer: recovers from panics")
+	log.Println("- RequestID: adds X-Request-Id header")
+	log.Println("- RealIP: sets real IP address")
+	log.Println("- HeaderLogging: logs all HTTP headers")
+	log.Println("- ContextEnrichment: adds custom values to request context")
+	
 	if err := s.Start(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("Failed to start service: %v", err)
 	}
