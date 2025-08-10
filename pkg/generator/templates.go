@@ -15,6 +15,6 @@ func getEmbeddedTemplate(templateName string) (*template.Template, error) {
 	tmpl := template.New(templateName).Funcs(template.FuncMap{
 		"ToLower": strings.ToLower,
 	})
-	
+
 	return tmpl.ParseFS(templatesFS, "templates/"+templateName)
 }

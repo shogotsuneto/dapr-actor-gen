@@ -66,10 +66,10 @@ type GenerationModel struct {
 
 // ActorModel represents a single actor's complete model for generation
 type ActorModel struct {
-	ActorType       string
-	PackageName     string
-	Types           TypeDefinitions
-	ActorInterface  ActorInterface
+	ActorType      string
+	PackageName    string
+	Types          TypeDefinitions
+	ActorInterface ActorInterface
 }
 
 // TypesTemplateData represents data for types template generation

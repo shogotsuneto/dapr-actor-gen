@@ -70,7 +70,7 @@ func TestEmbeddedTemplateContent(t *testing.T) {
 					"Aliases": []interface{}{},
 				},
 			}
-			
+
 			err = tmpl.Execute(&output, dummyData)
 			if err != nil {
 				t.Fatalf("Failed to execute template: %v", err)
