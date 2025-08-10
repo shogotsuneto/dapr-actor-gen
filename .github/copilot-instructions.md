@@ -137,7 +137,7 @@ output/
 ## Project Context
 
 - **Purpose**: Schema-first development for Dapr actors
-- **Input**: OpenAPI 3.0 specifications with `x-actor-type` extensions
+- **Input**: OpenAPI 3.0 specifications with actor types parsed from path patterns
 - **Output**: Ready-to-implement Go actor packages
 - **Design**: Generates actor-specific packages with embedded types (type duplication by design)
 - **Integration**: Works with Dapr Go SDK for actor registration and execution
