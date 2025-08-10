@@ -80,23 +80,6 @@ The **Counter actor** (`counter/impl.go`) demonstrates how to:
 - **Log context information** in actor methods (`Get`, `Increment`)
 - **Access middleware-provided data** within actor business logic
 
-### Example Output
-
-When making requests to the actors, you'll see logs like:
-```
-=== HTTP Headers for POST /actors/Counter/my-counter/method/Increment ===
-Header: Content-Type: application/json
-Header: User-Agent: curl/7.64.1
-Header: X-Custom-Header: my-value
-=== End Headers ===
-Context enriched with RequestID: 20241201-143022.123
-[Counter] Operation: Increment, RequestID: 20241201-143022.123
-[Counter] Operation: Increment, User: example-user, Role: actor-service, Timestamp: 2024-12-01T14:30:22Z
-[Counter] Incremented from 0 to 1
-```
-
-This demonstrates the complete flow from middleware → context → actor usage.
-
 ## Running the Example
 
 1. **Start Dapr sidecar**:
