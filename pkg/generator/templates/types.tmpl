@@ -17,3 +17,42 @@ type {{.Name}} struct {
 // {{.Name}} {{.Description}}
 type {{.Name}} = {{.AliasTarget}}
 {{end}}
+
+{{range .Types.Enums}}
+// {{.Name}} {{.Description}}
+type {{.Name}} {{.BaseType}}
+
+// {{.Name}} constants
+const (
+{{- $enumName := .Name}}
+{{- range .Values}}
+	{{$enumName}}{{. | title}} {{$enumName}} = "{{.}}"
+{{- end}}
+)
+
+// IsValid returns true if the {{.Name}} value is valid
+func (e {{.Name}}) IsValid() bool {
+	switch e {
+{{- range .Values}}
+	case {{$enumName}}{{. | title}}:
+		return true
+{{- end}}
+	default:
+		return false
+	}
+}
+
+// String returns the string representation of {{.Name}}
+func (e {{.Name}}) String() string {
+	return string(e)
+}
+
+// All{{.Name}}Values returns all valid {{.Name}} values
+func All{{.Name}}Values() []{{.Name}} {
+	return []{{.Name}}{
+{{- range .Values}}
+		{{$enumName}}{{. | title}},
+{{- end}}
+	}
+}
+{{end}}

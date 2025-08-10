@@ -39,6 +39,40 @@ func extractRequestType(requestBody *openapi3.RequestBody) string {
 	return ""
 }
 
+// resolveGoType resolves Go type from OpenAPI schema, handling $ref properly
+func resolveGoType(propRef *openapi3.SchemaRef) string {
+	// Check if this property is a direct reference to another schema
+	if propRef.Ref != "" {
+		// Extract referenced type name from $ref
+		refParts := strings.Split(propRef.Ref, "/")
+		if len(refParts) > 0 {
+			return refParts[len(refParts)-1]
+		}
+	}
+
+	prop := propRef.Value
+	if prop == nil {
+		return "interface{}"
+	}
+
+	// Handle array types with potential $ref items
+	if prop.Type.Is("array") && prop.Items != nil {
+		if prop.Items.Ref != "" {
+			// Array of referenced type
+			refParts := strings.Split(prop.Items.Ref, "/")
+			if len(refParts) > 0 {
+				return "[]" + refParts[len(refParts)-1]
+			}
+		} else {
+			// Array of primitive type
+			return "[]" + getGoType(prop.Items.Value)
+		}
+	}
+
+	// For other types, use the existing logic
+	return getGoType(prop)
+}
+
 // getGoType converts OpenAPI schema type to Go type
 func getGoType(schema *openapi3.Schema) string {
 	switch {

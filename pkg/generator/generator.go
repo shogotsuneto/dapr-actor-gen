@@ -88,7 +88,7 @@ func (g *Generator) GenerateActorPackages(model *GenerationModel, baseOutputDir 
 
 func (g *Generator) generateActorTypes(actorModel *ActorModel, outputDir string) error {
 	// Load template from embedded filesystem
-	tmpl, err := getEmbeddedTemplate("actor_types.tmpl")
+	tmpl, err := getEmbeddedTemplate("types.tmpl")
 	if err != nil {
 		return fmt.Errorf("failed to parse actor types template: %v", err)
 	}
@@ -97,9 +97,11 @@ func (g *Generator) generateActorTypes(actorModel *ActorModel, outputDir string)
 	processedTypes := TypeDefinitions{
 		Structs: make([]StructType, len(actorModel.Types.Structs)),
 		Aliases: make([]TypeAlias, len(actorModel.Types.Aliases)),
+		Enums:   make([]EnumType, len(actorModel.Types.Enums)),
 	}
 	copy(processedTypes.Structs, actorModel.Types.Structs)
 	copy(processedTypes.Aliases, actorModel.Types.Aliases)
+	copy(processedTypes.Enums, actorModel.Types.Enums)
 
 	// Generate types file
 	data := struct {

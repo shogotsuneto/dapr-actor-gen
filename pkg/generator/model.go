@@ -25,10 +25,19 @@ type TypeAlias struct {
 	OriginalName string // For type aliases - original parameter name
 }
 
+// EnumType represents an enum type definition in the intermediate model
+type EnumType struct {
+	Name        string
+	Description string
+	BaseType    string   // The underlying Go type (e.g., "string", "int")
+	Values      []string // The enum values
+}
+
 // TypeDefinitions represents a collection of type definitions
 type TypeDefinitions struct {
 	Structs []StructType
 	Aliases []TypeAlias
+	Enums   []EnumType
 }
 
 // Method represents an actor method in the intermediate model

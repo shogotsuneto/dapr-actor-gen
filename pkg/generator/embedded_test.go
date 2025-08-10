@@ -8,7 +8,7 @@ import (
 func TestEmbeddedTemplates(t *testing.T) {
 	// Test that all required templates can be loaded from embedded filesystem
 	templateNames := []string{
-		"actor_types.tmpl",
+		"types.tmpl",
 		"interface.tmpl",
 		"factory.tmpl",
 	}
@@ -40,7 +40,7 @@ func TestEmbeddedTemplateContent(t *testing.T) {
 	}{
 		{"interface.tmpl", "actor.ServerContext"},
 		{"factory.tmpl", "NewActorFactory"},
-		{"actor_types.tmpl", "package test"},
+		{"types.tmpl", "package test"},
 	}
 
 	for _, test := range tests {
@@ -68,6 +68,7 @@ func TestEmbeddedTemplateContent(t *testing.T) {
 				"Types": map[string]interface{}{
 					"Structs": []interface{}{},
 					"Aliases": []interface{}{},
+					"Enums":   []interface{}{},
 				},
 			}
 

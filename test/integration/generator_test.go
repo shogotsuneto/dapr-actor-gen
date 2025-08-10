@@ -196,11 +196,51 @@ func TestTypeAliasGeneration(t *testing.T) {
 		aliasNames[alias.Name] = true
 	}
 
+	// Look for specific enum types that should be generated
+	enumNames := make(map[string]bool)
+	for _, enum := range actor.Types.Enums {
+		enumNames[enum.Name] = true
+	}
+
 	// These should be generated from the schema definitions
-	expectedAliases := []string{"UserId", "EmailAddress", "UserStatus"}
+	expectedAliases := []string{"UserId", "EmailAddress"}
 	for _, expected := range expectedAliases {
 		if !aliasNames[expected] {
 			t.Errorf("Expected type alias '%s' not found", expected)
+		}
+	}
+
+	// UserStatus should be generated as an enum
+	if !enumNames["UserStatus"] {
+		t.Error("Expected enum 'UserStatus' not found")
+	}
+
+	// Verify enum values
+	var userStatusEnum *generator.EnumType
+	for _, enum := range actor.Types.Enums {
+		if enum.Name == "UserStatus" {
+			userStatusEnum = &enum
+			break
+		}
+	}
+
+	if userStatusEnum == nil {
+		t.Error("UserStatus enum not found")
+	} else {
+		expectedValues := []string{"active", "inactive", "suspended", "pending"}
+		if len(userStatusEnum.Values) != len(expectedValues) {
+			t.Errorf("Expected %d enum values, got %d", len(expectedValues), len(userStatusEnum.Values))
+		}
+		
+		valueMap := make(map[string]bool)
+		for _, value := range userStatusEnum.Values {
+			valueMap[value] = true
+		}
+		
+		for _, expected := range expectedValues {
+			if !valueMap[expected] {
+				t.Errorf("Expected enum value '%s' not found", expected)
+			}
 		}
 	}
 }
