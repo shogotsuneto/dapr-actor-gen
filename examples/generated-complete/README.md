@@ -129,6 +129,29 @@ curl -X POST http://localhost:3500/v1.0/actors/Counter/my-counter/method/Set \
 
 # Decrement counter
 curl -X POST http://localhost:3500/v1.0/actors/Counter/my-counter/method/Decrement
+
+# Example with custom headers (demonstrates header logging middleware)
+curl -X POST http://localhost:3500/v1.0/actors/Counter/my-counter/method/Increment \
+  -H "Content-Type: application/json" \
+  -H "X-Custom-Header: my-custom-value" \
+  -H "X-User-Id: user123" \
+  -H "X-Client-Version: 1.0.0"
+```
+
+**Expected log output with custom headers:**
+```
+=== HTTP Headers for POST /actors/Counter/my-counter/method/Increment ===
+Header: Content-Type: application/json
+Header: User-Agent: curl/7.64.1
+Header: X-Custom-Header: my-custom-value
+Header: X-User-Id: user123
+Header: X-Client-Version: 1.0.0
+Header: Accept: */*
+=== End Headers ===
+Context enriched with RequestID: 20241201-143022.123
+[Counter] Operation: Increment, RequestID: 20241201-143022.123
+[Counter] Operation: Increment, User: example-user, Role: actor-service, Timestamp: 2024-12-01T14:30:22Z
+[Counter] Incremented from 0 to 1
 ```
 
 ### BankAccount Actor Examples
