@@ -25,25 +25,9 @@ func (a *Counter) Type() string {
 
 
 // Configure Configure counter mode
-// Implements basic enum validation and state management
+// TODO: Implement the actual business logic for this method
 func (a *Counter) Configure(ctx context.Context, request ConfigureCounterRequest) (*CounterState, error) {
-	// Validate the enum value
-	if !request.Mode.IsValid() {
-		return nil, errors.New("invalid counter mode: " + string(request.Mode))
-	}
-	
-	// Create or update state
-	state := CounterState{
-		Value: 0, // Default value for demo
-		Mode: request.Mode,
-		IsEnabled: request.IsEnabled,
-		Metadata: request.Metadata,
-	}
-	
-	// In a real implementation, you'd save the state using Dapr state management
-	// Example: a.GetStateManager().SetState(ctx, "state", state)
-	
-	return &state, nil
+	return nil, errors.New("Configure method is not implemented")
 }
 
 // Decrement Decrement the counter

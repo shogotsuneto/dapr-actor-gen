@@ -2,15 +2,17 @@ openapi: 3.0.3
 info:
   title: Multi-Actor API with Enums
   description: |
-    Dapr Actor API specification demonstrating enum usage.
+    Dapr Actor API specification demonstrating enum usage across multiple actor types.
     
     This specification demonstrates:
     - **CounterActor**: Counter with operating modes using the CounterMode enum
+    - **BankAccountActor**: Banking operations with account status using the AccountStatus enum
     
     **Enum Features Demonstrated**:
     - Type-safe enum constants with validation
     - Enum usage in request/response schemas
     - Enum integration with actor methods
+    - Multi-actor enum usage patterns
     
     **Generated from**: This specification serves as the schema-first definition
     for generating Go interfaces, types, and enum constants.
@@ -128,6 +130,67 @@ paths:
               schema:
                 $ref: '#/components/schemas/CounterState'
 
+  # BankAccount paths demonstrating enum usage
+  /BankAccount/{actorId}/method/CreateAccount:
+    post:
+      summary: Create new bank account with initial status
+      description: |
+        Creates a new bank account with initial account status.
+        Demonstrates enum usage for account status management.
+      parameters:
+        - $ref: '#/components/parameters/ActorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAccountRequest'
+      responses:
+        '200':
+          description: Account created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankAccountState'
+
+  /BankAccount/{actorId}/method/UpdateStatus:
+    post:
+      summary: Update account status
+      description: |
+        Updates the account status using the AccountStatus enum.
+        Demonstrates enum-based status transitions and validation.
+      parameters:
+        - $ref: '#/components/parameters/ActorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateStatusRequest'
+      responses:
+        '200':
+          description: Account status updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankAccountState'
+
+  /BankAccount/{actorId}/method/GetAccount:
+    get:
+      summary: Get current account information
+      description: |
+        Gets current account information including status.
+        Shows enum values in response data.
+      parameters:
+        - $ref: '#/components/parameters/ActorId'
+      responses:
+        '200':
+          description: Current account state with enum values
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankAccountState'
+
 components:
   parameters:
     ActorId:
@@ -154,6 +217,12 @@ components:
       enum: ["Manual", "Automatic", "Scheduled", "Triggered"]
       description: Operating mode for the counter actor
       example: "Manual"
+
+    AccountStatus:
+      type: string
+      enum: ["Active", "Suspended", "Closed", "Pending", "Frozen"]
+      description: Current status of the bank account
+      example: "Active"
 
     # ========================================
     # COUNTER ACTOR SCHEMAS
@@ -267,4 +336,95 @@ components:
           description: Reason for setting the value
           maxLength: 200
           example: "Reset for new month"
+      additionalProperties: false
+
+    # ========================================
+    # BANKACCOUNT ACTOR SCHEMAS
+    # ========================================
+
+    BankAccountState:
+      type: object
+      description: Current state of the bank account actor with enum-based status
+      required:
+        - accountId
+        - balance
+        - status
+      properties:
+        accountId:
+          type: string
+          description: Unique identifier for the bank account
+          example: "ACC-12345"
+        balance:
+          type: number
+          format: double
+          description: Current account balance
+          example: 1250.75
+        status:
+          $ref: '#/components/schemas/AccountStatus'
+        isEnabled:
+          type: boolean
+          description: Whether the account is currently enabled for transactions
+          default: true
+          example: true
+        lastModified:
+          type: string
+          format: date-time
+          description: When the account was last modified
+          example: "2024-01-15T10:30:00Z"
+        metadata:
+          type: object
+          description: Additional account metadata
+          additionalProperties: true
+          example:
+            branch: "downtown"
+            accountType: "savings"
+      additionalProperties: false
+
+    CreateAccountRequest:
+      type: object
+      description: Request to create a new bank account
+      required:
+        - accountId
+        - initialBalance
+      properties:
+        accountId:
+          type: string
+          description: Unique identifier for the new account
+          pattern: '^ACC-[0-9]+$'
+          example: "ACC-12345"
+        initialBalance:
+          type: number
+          format: double
+          description: Initial balance for the account
+          minimum: 0
+          example: 100.00
+        status:
+          $ref: '#/components/schemas/AccountStatus'
+          description: Initial account status (defaults to Pending)
+        metadata:
+          type: object
+          description: Optional metadata for the account
+          additionalProperties: true
+          example:
+            branch: "downtown"
+            accountType: "savings"
+      additionalProperties: false
+
+    UpdateStatusRequest:
+      type: object
+      description: Request to update account status
+      required:
+        - status
+      properties:
+        status:
+          $ref: '#/components/schemas/AccountStatus'
+        reason:
+          type: string
+          description: Reason for the status change
+          maxLength: 200
+          example: "Account verification completed"
+        metadata:
+          type: object
+          description: Optional metadata for the status change
+          additionalProperties: true
       additionalProperties: false
