@@ -4,6 +4,18 @@
 package bankaccount
 
 
+// AccountEvent A single account event
+type AccountEvent struct {
+	// Event-specific data
+	Data map[string]interface{} `json:"data"`
+	// Unique event identifier
+	EventId string `json:"eventId"`
+	// Type of event
+	EventType AccountEventEventType `json:"eventType"`
+	// When the event occurred
+	Timestamp string `json:"timestamp"`
+}
+
 // BankAccountState Current state of bank account (computed from events)
 type BankAccountState struct {
 	// Unique account identifier
@@ -39,7 +51,7 @@ type TransactionHistory struct {
 	// Account identifier
 	AccountId string `json:"accountId"`
 	// List of all events in chronological order
-	Events []interface{} `json:"events"`
+	Events []AccountEvent `json:"events"`
 }
 
 // WithdrawRequest Request to withdraw money
@@ -51,3 +63,15 @@ type WithdrawRequest struct {
 }
 
 
+
+
+
+// AccountEventEventType defines valid values for AccountEvent.eventType
+type AccountEventEventType string
+
+// AccountEventEventType constants
+const (
+	AccountEventEventTypeAccountCreated AccountEventEventType = "AccountCreated"
+	AccountEventEventTypeMoneyDeposited AccountEventEventType = "MoneyDeposited"
+	AccountEventEventTypeMoneyWithdrawn AccountEventEventType = "MoneyWithdrawn"
+)

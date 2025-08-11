@@ -10,24 +10,10 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
 	"github.com/dapr/go-sdk/actor"
 	"github.com/google/uuid"
 )
-
-const (
-	// Event types
-	EventTypeAccountCreated = "AccountCreated"
-	EventTypeMoneyDeposited = "MoneyDeposited"
-	EventTypeMoneyWithdrawn = "MoneyWithdrawn"
-)
-
-// AccountEvent represents a single account event for event sourcing
-type AccountEvent struct {
-	EventID   string                 `json:"eventId"`
-	EventType string                 `json:"eventType"`
-	Timestamp string                 `json:"timestamp"`
-	Data      map[string]interface{} `json:"data"`
-}
 
 // BankAccount is a working implementation of BankAccountAPI using event sourcing patterns.
 // This implementation demonstrates event-sourced actor patterns with in-memory storage.
@@ -54,12 +40,12 @@ func (a *BankAccount) getEvents(ctx context.Context) []AccountEvent {
 }
 
 // appendEvent adds a new event to in-memory storage
-func (a *BankAccount) appendEvent(ctx context.Context, eventType string, eventData map[string]interface{}) {
+func (a *BankAccount) appendEvent(ctx context.Context, eventType AccountEventEventType, eventData map[string]interface{}) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	
 	event := AccountEvent{
-		EventID:   uuid.New().String(),
+		EventId:   uuid.New().String(),
 		EventType: eventType,
 		Timestamp: time.Now().Format(time.RFC3339),
 		Data:      eventData,
@@ -81,7 +67,7 @@ func (a *BankAccount) computeCurrentState(ctx context.Context) (*BankAccountStat
 	
 	for _, event := range events {
 		switch event.EventType {
-		case EventTypeAccountCreated:
+		case AccountEventEventTypeAccountCreated:
 			state.AccountId = a.ID()
 			if ownerName, ok := event.Data["ownerName"].(string); ok {
 				state.OwnerName = ownerName
@@ -91,12 +77,12 @@ func (a *BankAccount) computeCurrentState(ctx context.Context) (*BankAccountStat
 			}
 			state.CreatedAt = event.Timestamp
 			
-		case EventTypeMoneyDeposited:
+		case AccountEventEventTypeMoneyDeposited:
 			if amount, ok := event.Data["amount"].(float64); ok {
 				state.Balance += amount
 			}
 			
-		case EventTypeMoneyWithdrawn:
+		case AccountEventEventTypeMoneyWithdrawn:
 			if amount, ok := event.Data["amount"].(float64); ok {
 				state.Balance -= amount
 			}
@@ -105,6 +91,7 @@ func (a *BankAccount) computeCurrentState(ctx context.Context) (*BankAccountStat
 	
 	return &state, nil
 }
+
 
 // CreateAccount creates a new bank account
 func (a *BankAccount) CreateAccount(ctx context.Context, request CreateAccountRequest) (*BankAccountState, error) {
@@ -128,7 +115,7 @@ func (a *BankAccount) CreateAccount(ctx context.Context, request CreateAccountRe
 		"initialDeposit": request.InitialDeposit,
 	}
 	
-	a.appendEvent(ctx, EventTypeAccountCreated, eventData)
+	a.appendEvent(ctx, AccountEventEventTypeAccountCreated, eventData)
 	
 	return a.computeCurrentState(ctx)
 }
@@ -145,7 +132,7 @@ func (a *BankAccount) Deposit(ctx context.Context, request DepositRequest) (*Ban
 		"description": request.Description,
 	}
 	
-	a.appendEvent(ctx, EventTypeMoneyDeposited, eventData)
+	a.appendEvent(ctx, AccountEventEventTypeMoneyDeposited, eventData)
 	
 	return a.computeCurrentState(ctx)
 }
@@ -159,33 +146,30 @@ func (a *BankAccount) GetBalance(ctx context.Context) (*BankAccountState, error)
 func (a *BankAccount) GetHistory(ctx context.Context) (*TransactionHistory, error) {
 	events := a.getEvents(ctx)
 	
-	// Convert AccountEvent to interface{} for the response
-	interfaceEvents := make([]interface{}, len(events))
-	for i, event := range events {
-		interfaceEvents[i] = event
+	if len(events) == 0 {
+		return nil, fmt.Errorf("account not found - no events exist")
 	}
 	
 	return &TransactionHistory{
 		AccountId: a.ID(),
-		Events:    interfaceEvents,
+		Events:    events,
 	}, nil
 }
 
 // Withdraw withdraws money from account
 func (a *BankAccount) Withdraw(ctx context.Context, request WithdrawRequest) (*BankAccountState, error) {
-	// Validate request
-	if request.Amount <= 0 {
-		return nil, fmt.Errorf("withdraw amount must be positive")
-	}
-	
-	// Check current balance
+	// Get current state to check balance
 	currentState, err := a.computeCurrentState(ctx)
 	if err != nil {
 		return nil, err
 	}
 	
-	if currentState.Balance < request.Amount {
-		return nil, fmt.Errorf("insufficient funds - current balance: %.2f, requested: %.2f", 
+	// Validate request
+	if request.Amount <= 0 {
+		return nil, fmt.Errorf("withdrawal amount must be positive")
+	}
+	if request.Amount > currentState.Balance {
+		return nil, fmt.Errorf("insufficient funds: current balance %.2f, requested %.2f", 
 			currentState.Balance, request.Amount)
 	}
 	
@@ -194,7 +178,7 @@ func (a *BankAccount) Withdraw(ctx context.Context, request WithdrawRequest) (*B
 		"description": request.Description,
 	}
 	
-	a.appendEvent(ctx, EventTypeMoneyWithdrawn, eventData)
+	a.appendEvent(ctx, AccountEventEventTypeMoneyWithdrawn, eventData)
 	
 	return a.computeCurrentState(ctx)
 }

@@ -6,6 +6,10 @@ package counter
 
 // CounterState Current state of the counter actor (state-based)
 type CounterState struct {
+	// Type of the last operation performed on the counter
+	LastOperation CounterOperation `json:"lastOperation,omitempty"`
+	// Current status of the counter
+	Status CounterStatus `json:"status"`
 	// The current counter value
 	Value int32 `json:"value"`
 }
@@ -17,3 +21,28 @@ type SetValueRequest struct {
 }
 
 
+
+
+
+// CounterOperation Type of the last operation performed on the counter
+type CounterOperation string
+
+// CounterOperation constants
+const (
+	CounterOperationIncrement CounterOperation = "increment"
+	CounterOperationDecrement CounterOperation = "decrement"
+	CounterOperationSet CounterOperation = "set"
+	CounterOperationGet CounterOperation = "get"
+	CounterOperationReset CounterOperation = "reset"
+)
+
+// CounterStatus Current status of the counter
+type CounterStatus string
+
+// CounterStatus constants
+const (
+	CounterStatusActive CounterStatus = "active"
+	CounterStatusPaused CounterStatus = "paused"
+	CounterStatusError CounterStatus = "error"
+	CounterStatusReset CounterStatus = "reset"
+)

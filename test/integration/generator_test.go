@@ -184,23 +184,58 @@ func TestTypeAliasGeneration(t *testing.T) {
 		t.Errorf("Expected actor type 'User', got '%s'", actor.ActorType)
 	}
 
-	// Verify that type aliases are generated from parameters
+	// Verify that type aliases are generated
 	totalAliases := len(actor.Types.Aliases)
 	if totalAliases == 0 {
-		t.Error("Expected type aliases to be generated from parameters, but found none")
+		t.Error("Expected type aliases to be generated, but found none")
 	}
 
-	// Look for specific type aliases that should be generated
+	// Look for specific type aliases that should be generated (non-enum types)
 	aliasNames := make(map[string]bool)
 	for _, alias := range actor.Types.Aliases {
 		aliasNames[alias.Name] = true
 	}
 
-	// These should be generated from the schema definitions
-	expectedAliases := []string{"UserId", "EmailAddress", "UserStatus"}
+	// These should be generated as type aliases (simple types without enums)
+	expectedAliases := []string{"UserId", "EmailAddress"}
 	for _, expected := range expectedAliases {
 		if !aliasNames[expected] {
 			t.Errorf("Expected type alias '%s' not found", expected)
+		}
+	}
+
+	// Verify that enum types are generated
+	totalEnums := len(actor.Types.Enums)
+	if totalEnums == 0 {
+		t.Error("Expected enum types to be generated, but found none")
+	}
+
+	// Look for specific enum types that should be generated
+	enumNames := make(map[string]bool)
+	for _, enum := range actor.Types.Enums {
+		enumNames[enum.Name] = true
+	}
+
+	// UserStatus should be generated as an enum type (has enum values)
+	expectedEnums := []string{"UserStatus"}
+	for _, expected := range expectedEnums {
+		if !enumNames[expected] {
+			t.Errorf("Expected enum type '%s' not found", expected)
+		}
+	}
+
+	// Verify UserStatus enum has the correct values
+	for _, enum := range actor.Types.Enums {
+		if enum.Name == "UserStatus" {
+			expectedValues := []string{"active", "inactive", "suspended", "pending"}
+			if len(enum.Values) != len(expectedValues) {
+				t.Errorf("Expected UserStatus to have %d values, got %d", len(expectedValues), len(enum.Values))
+			}
+			for i, expected := range expectedValues {
+				if i >= len(enum.Values) || enum.Values[i] != expected {
+					t.Errorf("Expected UserStatus value[%d] to be '%s', got '%s'", i, expected, enum.Values[i])
+				}
+			}
 		}
 	}
 }
@@ -338,4 +373,60 @@ func TestGeneratorWithExampleApplication(t *testing.T) {
 	}
 
 	t.Logf("Successfully generated actor packages with example application")
+}
+
+func TestEnumGeneration(t *testing.T) {
+	// Load the type-alias OpenAPI spec (which includes enums)
+	loader := openapi3.NewLoader()
+	doc, err := loader.LoadFromFile("testdata/type-alias.yaml")
+	if err != nil {
+		t.Fatalf("Failed to load type-alias OpenAPI spec: %v", err)
+	}
+
+	// Parse the spec to intermediate model
+	p := parser.NewOpenAPIParser(doc)
+	model, err := p.Parse()
+	if err != nil {
+		t.Fatalf("Failed to parse OpenAPI spec: %v", err)
+	}
+
+	// Find the User actor (which should have UserStatus enum)
+	var userActor *generator.ActorInterface
+	for i := range model.Actors {
+		if model.Actors[i].ActorType == "User" {
+			userActor = &model.Actors[i]
+			break
+		}
+	}
+	if userActor == nil {
+		t.Fatal("User actor not found")
+	}
+
+	// Verify that enum types are generated for User
+	if len(userActor.Types.Enums) == 0 {
+		t.Error("Expected enum types to be generated for User actor, but found none")
+	}
+
+	// Look for UserStatus enum
+	var userStatusEnum *generator.EnumType
+	for i := range userActor.Types.Enums {
+		if userActor.Types.Enums[i].Name == "UserStatus" {
+			userStatusEnum = &userActor.Types.Enums[i]
+			break
+		}
+	}
+	if userStatusEnum == nil {
+		t.Error("Expected UserStatus enum not found in User actor")
+	} else {
+		// Verify enum has correct values
+		expectedValues := []string{"active", "inactive", "suspended", "pending"}
+		if len(userStatusEnum.Values) != len(expectedValues) {
+			t.Errorf("Expected UserStatus to have %d values, got %d", len(expectedValues), len(userStatusEnum.Values))
+		}
+		for i, expected := range expectedValues {
+			if i >= len(userStatusEnum.Values) || userStatusEnum.Values[i] != expected {
+				t.Errorf("Expected UserStatus value[%d] to be '%s', got '%s'", i, expected, userStatusEnum.Values[i])
+			}
+		}
+	}
 }
