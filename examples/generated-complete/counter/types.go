@@ -29,11 +29,11 @@ type CounterOperation string
 
 // CounterOperation constants
 const (
-	CounterOperationincrement CounterOperation = "increment"
-	CounterOperationdecrement CounterOperation = "decrement"
-	CounterOperationset CounterOperation = "set"
-	CounterOperationget CounterOperation = "get"
-	CounterOperationreset CounterOperation = "reset"
+	CounterOperationIncrement CounterOperation = "increment"
+	CounterOperationDecrement CounterOperation = "decrement"
+	CounterOperationSet CounterOperation = "set"
+	CounterOperationGet CounterOperation = "get"
+	CounterOperationReset CounterOperation = "reset"
 )
 
 // CounterStatus Current status of the counter
@@ -41,8 +41,8 @@ type CounterStatus string
 
 // CounterStatus constants
 const (
-	CounterStatusactive CounterStatus = "active"
-	CounterStatuspaused CounterStatus = "paused"
-	CounterStatuserror CounterStatus = "error"
-	CounterStatusreset CounterStatus = "reset"
+	CounterStatusActive CounterStatus = "active"
+	CounterStatusPaused CounterStatus = "paused"
+	CounterStatusError CounterStatus = "error"
+	CounterStatusReset CounterStatus = "reset"
 )

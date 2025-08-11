@@ -72,8 +72,8 @@ func (a *Counter) Decrement(ctx context.Context) (*CounterState, error) {
 	
 	return &CounterState{
 		Value:         newValue,
-		Status:        CounterStatusactive,
-		LastOperation: CounterOperationdecrement,
+		Status:        CounterStatusActive,
+		LastOperation: CounterOperationDecrement,
 	}, nil
 }
 
@@ -86,8 +86,8 @@ func (a *Counter) Get(ctx context.Context) (*CounterState, error) {
 	log.Printf("[Counter] Current value retrieved: %d", value)
 	return &CounterState{
 		Value:         value,
-		Status:        CounterStatusactive,
-		LastOperation: CounterOperationget,
+		Status:        CounterStatusActive,
+		LastOperation: CounterOperationGet,
 	}, nil
 }
 
@@ -103,8 +103,8 @@ func (a *Counter) Increment(ctx context.Context) (*CounterState, error) {
 	log.Printf("[Counter] Incremented from %d to %d", currentValue, newValue)
 	return &CounterState{
 		Value:         newValue,
-		Status:        CounterStatusactive,
-		LastOperation: CounterOperationincrement,
+		Status:        CounterStatusActive,
+		LastOperation: CounterOperationIncrement,
 	}, nil
 }
 
@@ -113,7 +113,7 @@ func (a *Counter) Set(ctx context.Context, request SetValueRequest) (*CounterSta
 	a.setValue(ctx, request.Value)
 	return &CounterState{
 		Value:         request.Value,
-		Status:        CounterStatusactive,
-		LastOperation: CounterOperationset,
+		Status:        CounterStatusActive,
+		LastOperation: CounterOperationSet,
 	}, nil
 }
