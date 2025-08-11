@@ -29,30 +29,4 @@ const (
 	{{$typeName}}{{$value}} {{$typeName}} = "{{$value}}"
 {{- end}}
 )
-
-// Valid{{.Name}}Values returns all valid values for {{.Name}}
-func Valid{{.Name}}Values() []{{.Name}} {
-	return []{{.Name}}{
-{{- range .Values}}
-		{{$typeName}}{{.}},
-{{- end}}
-	}
-}
-
-// String returns the string representation of {{.Name}}
-func (e {{.Name}}) String() string {
-	return string(e)
-}
-
-// IsValid checks if the {{.Name}} value is valid
-func (e {{.Name}}) IsValid() bool {
-	switch e {
-{{- range .Values}}
-	case {{$typeName}}{{.}}:
-		return true
-{{- end}}
-	default:
-		return false
-	}
-}
 {{end}}
