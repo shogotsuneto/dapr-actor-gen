@@ -1,6 +1,6 @@
 # Generated Complete Example
 
-This directory contains a **complete, working implementation** of Dapr actors generated from the OpenAPI specification in `../multi-actors/openapi.yaml`.
+This directory contains a **complete, working implementation** of Dapr actors generated from the OpenAPI specification in `../openapi.yaml`.
 
 ## Purpose
 

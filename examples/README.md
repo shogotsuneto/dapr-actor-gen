@@ -1,49 +1,51 @@
 # Examples
 
-This directory contains examples showing how to use dapr-actor-gen.
+This directory contains examples demonstrating how to use dapr-actor-gen to generate Dapr actors from OpenAPI specifications.
 
-## OpenAPI Specifications
+## Available Examples
 
-- `multi-actors/openapi.yaml` - Example OpenAPI spec defining Counter and BankAccount actors
+### multi-actors/
+Complete example showing multiple actor types (Counter and BankAccount) in a single OpenAPI specification. Includes:
+- `openapi.yaml` - OpenAPI specification defining two actor types
+- `generated/` - Complete working implementation with business logic
+- `README.md` - Detailed documentation and usage instructions
 
-## Generated Examples
+This example demonstrates different actor patterns (state-based vs event-sourced) and shows the progression from generated stubs to production-ready implementations.
 
-The following directories contain generated code demonstrating different generation modes:
+## Quick Start
 
-- `generated-interfaces-only/` - Basic interface generation (default behavior)
-- `generated-with-impl/` - Interfaces + partial implementation stubs (`--generate-impl`)
-- `generated-with-example/` - Interfaces + example application (`--generate-example`)
-- `generated-complete/` - All features combined (`--generate-impl --generate-example`)
+1. **Build the tool:**
+   ```bash
+   make build
+   ```
 
-These generated examples serve as:
-- Reference implementations for users
-- Regression tests for validating code generation changes
-- Documentation of the tool's capabilities
+2. **Generate code:**
+   ```bash
+   # Basic generation (interfaces only)
+   ./bin/dapr-actor-gen examples/multi-actors/openapi.yaml ./output
+   
+   # With implementation stubs (recommended)
+   ./bin/dapr-actor-gen --generate-impl examples/multi-actors/openapi.yaml ./output
+   ```
 
-All generated examples compile successfully and demonstrate proper Dapr actor integration.
+3. **Compile generated code:**
+   ```bash
+   cd ./output
+   go mod init your-module
+   go mod tidy
+   go build ./...
+   ```
 
-## Usage
+## Generation Modes
 
-Generate code from the example schema:
-
-```bash
-# Basic interface generation (default behavior)
-./bin/dapr-actor-gen examples/multi-actors/openapi.yaml ./output
-
-# Generate with partial implementation stubs
-./bin/dapr-actor-gen --generate-impl examples/multi-actors/openapi.yaml ./output
-
-# Generate with example application
-./bin/dapr-actor-gen --generate-example examples/multi-actors/openapi.yaml ./output
-
-# Generate everything
-./bin/dapr-actor-gen --generate-impl --generate-example examples/multi-actors/openapi.yaml ./output
-```
+- **Default**: Generates interfaces and types only (will not compile without implementations)
+- **--generate-impl**: Adds stub implementations that return "not implemented" errors
+- **--generate-example**: Adds example main.go and go.mod for a complete application
+- **Both flags**: Creates a fully functional example application
 
 ## Key Benefits
 
-1. **Type Safety**: Generated types match your OpenAPI schema exactly
-2. **Compile-time Validation**: Interface ensures you implement all required methods
-3. **Automatic Factories**: Ready-to-use registration functions
-4. **Documentation**: Generated code includes comments from your OpenAPI spec
-5. **Consistency**: All actors follow the same patterns and conventions
+- **Schema-first development**: Define actors in OpenAPI, implement in Go
+- **Type safety**: Generated types match your OpenAPI schema exactly
+- **Auto-generated factories**: Ready-to-use actor registration functions
+- **Documentation**: Generated code includes comments from your OpenAPI spec
