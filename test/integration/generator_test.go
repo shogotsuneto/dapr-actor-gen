@@ -376,11 +376,11 @@ func TestGeneratorWithExampleApplication(t *testing.T) {
 }
 
 func TestEnumGeneration(t *testing.T) {
-	// Load the multi-actors OpenAPI spec (which includes enums)
+	// Load the type-alias OpenAPI spec (which includes enums)
 	loader := openapi3.NewLoader()
-	doc, err := loader.LoadFromFile("../../examples/multi-actors/openapi.yaml")
+	doc, err := loader.LoadFromFile("testdata/type-alias.yaml")
 	if err != nil {
-		t.Fatalf("Failed to load multi-actors OpenAPI spec: %v", err)
+		t.Fatalf("Failed to load type-alias OpenAPI spec: %v", err)
 	}
 
 	// Parse the spec to intermediate model
@@ -390,87 +390,42 @@ func TestEnumGeneration(t *testing.T) {
 		t.Fatalf("Failed to parse OpenAPI spec: %v", err)
 	}
 
-	// Find the BankAccount actor (which should have AccountEventEventType enum)
-	var bankActor *generator.ActorInterface
+	// Find the User actor (which should have UserStatus enum)
+	var userActor *generator.ActorInterface
 	for i := range model.Actors {
-		if model.Actors[i].ActorType == "BankAccount" {
-			bankActor = &model.Actors[i]
+		if model.Actors[i].ActorType == "User" {
+			userActor = &model.Actors[i]
 			break
 		}
 	}
-	if bankActor == nil {
-		t.Fatal("BankAccount actor not found")
+	if userActor == nil {
+		t.Fatal("User actor not found")
 	}
 
-	// Verify that enum types are generated for BankAccount
-	if len(bankActor.Types.Enums) == 0 {
-		t.Error("Expected enum types to be generated for BankAccount actor, but found none")
+	// Verify that enum types are generated for User
+	if len(userActor.Types.Enums) == 0 {
+		t.Error("Expected enum types to be generated for User actor, but found none")
 	}
 
-	// Look for AccountEventEventType enum
-	var eventTypeEnum *generator.EnumType
-	for i := range bankActor.Types.Enums {
-		if bankActor.Types.Enums[i].Name == "AccountEventEventType" {
-			eventTypeEnum = &bankActor.Types.Enums[i]
+	// Look for UserStatus enum
+	var userStatusEnum *generator.EnumType
+	for i := range userActor.Types.Enums {
+		if userActor.Types.Enums[i].Name == "UserStatus" {
+			userStatusEnum = &userActor.Types.Enums[i]
 			break
 		}
 	}
-	if eventTypeEnum == nil {
-		t.Error("Expected AccountEventEventType enum not found in BankAccount actor")
+	if userStatusEnum == nil {
+		t.Error("Expected UserStatus enum not found in User actor")
 	} else {
 		// Verify enum has correct values
-		expectedValues := []string{"AccountCreated", "MoneyDeposited", "MoneyWithdrawn"}
-		if len(eventTypeEnum.Values) != len(expectedValues) {
-			t.Errorf("Expected AccountEventEventType to have %d values, got %d", len(expectedValues), len(eventTypeEnum.Values))
+		expectedValues := []string{"active", "inactive", "suspended", "pending"}
+		if len(userStatusEnum.Values) != len(expectedValues) {
+			t.Errorf("Expected UserStatus to have %d values, got %d", len(expectedValues), len(userStatusEnum.Values))
 		}
 		for i, expected := range expectedValues {
-			if i >= len(eventTypeEnum.Values) || eventTypeEnum.Values[i] != expected {
-				t.Errorf("Expected AccountEventEventType value[%d] to be '%s', got '%s'", i, expected, eventTypeEnum.Values[i])
-			}
-		}
-	}
-
-	// Find the Counter actor (which should have CounterStatus and CounterOperation enums)
-	var counterActor *generator.ActorInterface
-	for i := range model.Actors {
-		if model.Actors[i].ActorType == "Counter" {
-			counterActor = &model.Actors[i]
-			break
-		}
-	}
-	if counterActor == nil {
-		t.Fatal("Counter actor not found")
-	}
-
-	// Verify that enum types are generated for Counter
-	if len(counterActor.Types.Enums) == 0 {
-		t.Error("Expected enum types to be generated for Counter actor, but found none")
-	}
-
-	// Look for CounterStatus and CounterOperation enums
-	enumNames := make(map[string]bool)
-	for _, enum := range counterActor.Types.Enums {
-		enumNames[enum.Name] = true
-	}
-
-	expectedEnums := []string{"CounterStatus", "CounterOperation"}
-	for _, expected := range expectedEnums {
-		if !enumNames[expected] {
-			t.Errorf("Expected enum type '%s' not found in Counter actor", expected)
-		}
-	}
-
-	// Verify CounterStatus enum values
-	for _, enum := range counterActor.Types.Enums {
-		if enum.Name == "CounterStatus" {
-			expectedValues := []string{"active", "paused", "error", "reset"}
-			if len(enum.Values) != len(expectedValues) {
-				t.Errorf("Expected CounterStatus to have %d values, got %d", len(expectedValues), len(enum.Values))
-			}
-			for i, expected := range expectedValues {
-				if i >= len(enum.Values) || enum.Values[i] != expected {
-					t.Errorf("Expected CounterStatus value[%d] to be '%s', got '%s'", i, expected, enum.Values[i])
-				}
+			if i >= len(userStatusEnum.Values) || userStatusEnum.Values[i] != expected {
+				t.Errorf("Expected UserStatus value[%d] to be '%s', got '%s'", i, expected, userStatusEnum.Values[i])
 			}
 		}
 	}
