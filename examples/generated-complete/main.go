@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -13,7 +14,6 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	daprd "github.com/dapr/go-sdk/service/http"
 
-	"example-dapr-actors/bankaccount"
 	"example-dapr-actors/counter"
 )
 
@@ -84,14 +84,51 @@ func main() {
 	r.Use(headerLoggingMiddleware)     // Log HTTP headers
 	r.Use(contextEnrichmentMiddleware) // Enrich context with custom values
 	
+	// Add enum demo endpoint
+	r.Get("/enum-demo", func(w http.ResponseWriter, r *http.Request) {
+		log.Println("Enum demo endpoint called")
+		w.Header().Set("Content-Type", "text/plain")
+		
+		demo := `=== CounterMode Enum Demonstration ===
+
+Available CounterMode values:
+`
+		
+		// Show all enum values
+		for _, mode := range counter.AllCounterModeValues() {
+			demo += fmt.Sprintf("- %s (valid: %t)\n", mode.String(), mode.IsValid())
+		}
+		
+		demo += fmt.Sprintf(`
+Enum validation examples:
+- "Manual": %t
+- "Invalid": %t
+
+Usage in API:
+POST /Counter/my-counter/method/Configure
+{
+  "mode": "Automatic",
+  "isEnabled": true
+}
+
+The enum provides:
+1. Type-safe constants (CounterModeManual, CounterModeAutomatic, etc.)
+2. Validation via IsValid() method
+3. All values listing via AllCounterModeValues() function
+4. String conversion via String() method
+
+This demonstrates how OpenAPI enums become robust, type-safe Go code!
+`, counter.CounterMode("Manual").IsValid(), counter.CounterMode("Invalid").IsValid())
+		
+		w.Write([]byte(demo))
+	})
+	
 	// Create a Dapr service with our custom Chi router
 	// This demonstrates how to use Chi router instead of the default mux
 	s := daprd.NewServiceWithMux(":8080", r)
 
 	// Register all generated actors
 
-	// Register BankAccount actor
-	s.RegisterActorImplFactoryContext(bankaccount.NewActorFactory())
 	// Register Counter actor
 	s.RegisterActorImplFactoryContext(counter.NewActorFactory())
 

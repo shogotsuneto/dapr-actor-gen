@@ -24,32 +24,42 @@ func (a *Counter) Type() string {
 }
 
 
-// Configure Configure counter mode and priority
-// TODO: Implement the actual business logic for this method
+// Configure Configure counter mode
+// Implements basic enum validation and state management
 func (a *Counter) Configure(ctx context.Context, request ConfigureCounterRequest) (*CounterState, error) {
-	return nil, errors.New("Configure method is not implemented")
+	// Validate the enum value
+	if !request.Mode.IsValid() {
+		return nil, errors.New("invalid counter mode: " + string(request.Mode))
+	}
+	
+	// Create or update state
+	state := CounterState{
+		Value: 0, // Default value for demo
+		Mode: request.Mode,
+		IsEnabled: request.IsEnabled,
+		Metadata: request.Metadata,
+	}
+	
+	// In a real implementation, you'd save the state using Dapr state management
+	// Example: a.GetStateManager().SetState(ctx, "state", state)
+	
+	return &state, nil
 }
 
-// Decrement Decrement counter by 1
+// Decrement Decrement the counter
 // TODO: Implement the actual business logic for this method
 func (a *Counter) Decrement(ctx context.Context, request DecrementRequest) (*CounterState, error) {
 	return nil, errors.New("Decrement method is not implemented")
 }
 
-// Get Get current counter value and configuration
-// TODO: Implement the actual business logic for this method
-func (a *Counter) Get(ctx context.Context) (*CounterState, error) {
-	return nil, errors.New("Get method is not implemented")
-}
-
-// Increment Increment counter by 1
+// Increment Increment the counter
 // TODO: Implement the actual business logic for this method
 func (a *Counter) Increment(ctx context.Context, request IncrementRequest) (*CounterState, error) {
 	return nil, errors.New("Increment method is not implemented")
 }
 
-// Set Set counter to specific value with priority
+// SetValue Set counter to specific value
 // TODO: Implement the actual business logic for this method
-func (a *Counter) Set(ctx context.Context, request SetValueRequest) (*CounterState, error) {
-	return nil, errors.New("Set method is not implemented")
+func (a *Counter) SetValue(ctx context.Context, request SetValueRequest) (*CounterState, error) {
+	return nil, errors.New("SetValue method is not implemented")
 }

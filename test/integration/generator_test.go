@@ -231,12 +231,12 @@ func TestTypeAliasGeneration(t *testing.T) {
 		if len(userStatusEnum.Values) != len(expectedValues) {
 			t.Errorf("Expected %d enum values, got %d", len(expectedValues), len(userStatusEnum.Values))
 		}
-		
+
 		valueMap := make(map[string]bool)
 		for _, value := range userStatusEnum.Values {
 			valueMap[value] = true
 		}
-		
+
 		for _, expected := range expectedValues {
 			if !valueMap[expected] {
 				t.Errorf("Expected enum value '%s' not found", expected)

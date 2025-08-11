@@ -2,16 +2,14 @@ openapi: 3.0.3
 info:
   title: Multi-Actor API with Enums
   description: |
-    Dapr Actor API specification demonstrating comprehensive enum usage.
+    Dapr Actor API specification demonstrating enum usage.
     
     This specification demonstrates:
-    - **CounterActor**: Counter with modes and priority levels using enums
-    - **BankAccountActor**: Banking operations with status, currency, and transaction type enums
+    - **CounterActor**: Counter with operating modes using the CounterMode enum
     
     **Enum Features Demonstrated**:
     - Type-safe enum constants with validation
     - Enum usage in request/response schemas
-    - Multiple enum types across different domains
     - Enum integration with actor methods
     
     **Generated from**: This specification serves as the schema-first definition
@@ -28,18 +26,18 @@ servers:
     description: Local Dapr sidecar (default configuration)
 
 paths:
-  # Counter paths with enum-based configuration
-  /Counter/{actorId}/method/Get:
+  # Counter paths demonstrating enum usage
+  /Counter/{actorId}/state:
     get:
-      summary: Get current counter value and configuration
+      summary: Get counter state with mode information
       description: |
-        Retrieves the current value and configuration of the counter.
-        Shows counter mode, priority level, and other enum-based settings.
+        Retrieves the current counter state including the operating mode.
+        Demonstrates enum usage in response data.
       parameters:
         - $ref: '#/components/parameters/ActorId'
       responses:
         '200':
-          description: Current counter state with enum values
+          description: Current counter state with enum mode
           content:
             application/json:
               schema:
@@ -47,10 +45,10 @@ paths:
 
   /Counter/{actorId}/method/Configure:
     post:
-      summary: Configure counter mode and priority
+      summary: Configure counter mode
       description: |
-        Sets the counter's operating mode and priority level using enums.
-        Demonstrates enum usage in request parameters.
+        Configures the counter's operating mode using the CounterMode enum.
+        Demonstrates enum usage in request validation.
       parameters:
         - $ref: '#/components/parameters/ActorId'
       requestBody:
@@ -69,10 +67,9 @@ paths:
 
   /Counter/{actorId}/method/Increment:
     post:
-      summary: Increment counter by 1
+      summary: Increment the counter
       description: |
-        Increases the counter value by 1 with priority-based operation.
-        Demonstrates enum usage in request and response.
+        Increments the counter value. Mode validation ensures operation compatibility.
       parameters:
         - $ref: '#/components/parameters/ActorId'
       requestBody:
@@ -91,10 +88,9 @@ paths:
 
   /Counter/{actorId}/method/Decrement:
     post:
-      summary: Decrement counter by 1
+      summary: Decrement the counter
       description: |
-        Decreases the counter value by 1 with priority-based operation.
-        Demonstrates enum usage in request and response.
+        Decrements the counter value. Mode validation ensures operation compatibility.
       parameters:
         - $ref: '#/components/parameters/ActorId'
       requestBody:
@@ -111,12 +107,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/CounterState'
 
-  /Counter/{actorId}/method/Set:
+  /Counter/{actorId}/method/SetValue:
     post:
-      summary: Set counter to specific value with priority
+      summary: Set counter to specific value
       description: |
-        Sets the counter to a specific value with priority level.
-        Shows how enums can be used to control operation behavior.
+        Sets the counter to a specific value. Mode validation controls access.
       parameters:
         - $ref: '#/components/parameters/ActorId'
       requestBody:
@@ -133,144 +128,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/CounterState'
 
-  # BankAccount paths with comprehensive enum usage
-  /BankAccount/{actorId}/method/CreateAccount:
-    post:
-      summary: Create new bank account with currency and initial status
-      description: |
-        Creates a new bank account with currency selection and account status.
-        Demonstrates enum usage for currency and account status.
-      parameters:
-        - $ref: '#/components/parameters/ActorId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateAccountRequest'
-      responses:
-        '200':
-          description: Account created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BankAccountState'
-
-  /BankAccount/{actorId}/method/UpdateStatus:
-    post:
-      summary: Update account status
-      description: |
-        Updates the account status using the AccountStatus enum.
-        Demonstrates enum-based status management.
-      parameters:
-        - $ref: '#/components/parameters/ActorId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateStatusRequest'
-      responses:
-        '200':
-          description: Account status updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BankAccountState'
-
-  /BankAccount/{actorId}/method/Deposit:
-    post:
-      summary: Deposit money with transaction type
-      description: |
-        Deposits money to the account with specified transaction type.
-        Shows enum usage for transaction categorization.
-      parameters:
-        - $ref: '#/components/parameters/ActorId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DepositRequest'
-      responses:
-        '200':
-          description: Money deposited successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BankAccountState'
-
-  /BankAccount/{actorId}/method/Withdraw:
-    post:
-      summary: Withdraw money with transaction type
-      description: |
-        Withdraws money from the account with specified transaction type.
-        Demonstrates enum-based transaction categorization.
-      parameters:
-        - $ref: '#/components/parameters/ActorId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/WithdrawRequest'
-      responses:
-        '200':
-          description: Money withdrawn successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BankAccountState'
-        '400':
-          description: Insufficient funds or invalid transaction
-
-  /BankAccount/{actorId}/method/GetBalance:
-    get:
-      summary: Get current account balance and status
-      description: |
-        Gets current account balance, status, and currency information.
-        Shows enum values in response data.
-      parameters:
-        - $ref: '#/components/parameters/ActorId'
-      responses:
-        '200':
-          description: Current account state with enum values
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BankAccountState'
-
-  /BankAccount/{actorId}/method/GetTransactions:
-    get:
-      summary: Get transactions filtered by type
-      description: |
-        Gets transaction history with optional filtering by transaction type.
-        Demonstrates enum usage in query parameters and response filtering.
-      parameters:
-        - $ref: '#/components/parameters/ActorId'
-        - name: transactionType
-          in: query
-          required: false
-          description: Filter transactions by type
-          schema:
-            $ref: '#/components/schemas/TransactionType'
-        - name: limit
-          in: query
-          required: false
-          description: Maximum number of transactions to return
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 50
-      responses:
-        '200':
-          description: Transaction history with enum-based filtering
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TransactionHistory'
-
 components:
   parameters:
     ActorId:
@@ -285,7 +142,7 @@ components:
         pattern: '^[a-zA-Z0-9_-]+$'
         minLength: 1
         maxLength: 50
-      example: "account-123"
+      example: "counter-123"
 
   schemas:
     # ========================================
@@ -298,35 +155,6 @@ components:
       description: Operating mode for the counter actor
       example: "Manual"
 
-    Priority:
-      type: string
-      enum: ["Low", "Medium", "High", "Critical"]
-      description: Priority level for counter operations
-      example: "Medium"
-
-    AccountStatus:
-      type: string
-      enum: ["Active", "Suspended", "Closed", "Pending", "Frozen"]
-      description: Current status of the bank account
-      example: "Active"
-
-    Currency:
-      type: string
-      enum: ["USD", "EUR", "GBP", "JPY", "CAD", "AUD"]
-      description: Supported currencies for bank accounts
-      example: "USD"
-
-    TransactionType:
-      type: string
-      enum: ["Deposit", "Withdrawal", "Transfer", "Fee", "Interest", "Refund", "Adjustment"]
-      description: Type of financial transaction
-      example: "Deposit"
-
-    EventType:
-      type: string
-      enum: ["AccountCreated", "StatusChanged", "MoneyDeposited", "MoneyWithdrawn", "AccountClosed"]
-      description: Types of events in the event-sourced bank account
-      example: "MoneyDeposited"
     # ========================================
     # COUNTER ACTOR SCHEMAS
     # ========================================
@@ -337,7 +165,6 @@ components:
       required:
         - value
         - mode
-        - priority
         - isEnabled
       properties:
         value:
@@ -347,8 +174,6 @@ components:
           example: 42
         mode:
           $ref: '#/components/schemas/CounterMode'
-        priority:
-          $ref: '#/components/schemas/Priority'
         isEnabled:
           type: boolean
           description: Whether the counter is currently enabled
@@ -369,15 +194,12 @@ components:
 
     ConfigureCounterRequest:
       type: object
-      description: Request to configure counter mode and priority
+      description: Request to configure counter mode
       required:
         - mode
-        - priority
       properties:
         mode:
           $ref: '#/components/schemas/CounterMode'
-        priority:
-          $ref: '#/components/schemas/Priority'
         isEnabled:
           type: boolean
           description: Enable or disable the counter
@@ -393,12 +215,8 @@ components:
 
     IncrementRequest:
       type: object
-      description: Request to increment counter with priority
-      required:
-        - priority
+      description: Request to increment counter
       properties:
-        priority:
-          $ref: '#/components/schemas/Priority'
         step:
           type: integer
           format: int32
@@ -415,12 +233,8 @@ components:
 
     DecrementRequest:
       type: object
-      description: Request to decrement counter with priority
-      required:
-        - priority
+      description: Request to decrement counter
       properties:
-        priority:
-          $ref: '#/components/schemas/Priority'
         step:
           type: integer
           format: int32
@@ -437,10 +251,9 @@ components:
 
     SetValueRequest:
       type: object
-      description: Request to set counter to specific value with priority
+      description: Request to set counter to specific value
       required:
         - value
-        - priority
       properties:
         value:
           type: integer
@@ -449,331 +262,9 @@ components:
           minimum: -2147483648
           maximum: 2147483647
           example: 100
-        priority:
-          $ref: '#/components/schemas/Priority'
         reason:
           type: string
           description: Reason for setting the value
           maxLength: 200
           example: "Reset for new month"
-      additionalProperties: false
-
-    # ========================================
-    # BANK ACCOUNT ACTOR SCHEMAS
-    # ========================================
-
-    BankAccountState:
-      type: object
-      description: Current state of bank account with comprehensive enum usage
-      required:
-        - accountId
-        - ownerName
-        - balance
-        - status
-        - currency
-      properties:
-        accountId:
-          type: string
-          description: Unique account identifier
-          example: "account-123"
-        ownerName:
-          type: string
-          description: Account owner name
-          example: "John Doe"
-        balance:
-          type: number
-          format: double
-          description: Current account balance
-          example: 1250.50
-        status:
-          $ref: '#/components/schemas/AccountStatus'
-        currency:
-          $ref: '#/components/schemas/Currency'
-        createdAt:
-          type: string
-          format: date-time
-          description: Account creation timestamp
-          example: "2024-01-15T10:30:00Z"
-        lastActivity:
-          type: string
-          format: date-time
-          description: Last transaction timestamp
-          example: "2024-01-20T14:45:00Z"
-        transactionCount:
-          type: integer
-          description: Total number of transactions
-          minimum: 0
-          example: 25
-        metadata:
-          type: object
-          description: Additional account metadata
-          additionalProperties: true
-          example:
-            branch: "downtown"
-            accountType: "checking"
-      additionalProperties: false
-
-    CreateAccountRequest:
-      type: object
-      description: Request to create a new bank account with currency and status
-      required:
-        - ownerName
-        - currency
-        - initialDeposit
-      properties:
-        ownerName:
-          type: string
-          description: Name of the account owner
-          minLength: 1
-          maxLength: 100
-          example: "John Doe"
-        currency:
-          $ref: '#/components/schemas/Currency'
-        initialDeposit:
-          type: number
-          format: double
-          description: Initial deposit amount in the specified currency
-          minimum: 0
-          example: 100.00
-        initialStatus:
-          $ref: '#/components/schemas/AccountStatus'
-          description: Initial account status (defaults to Pending)
-          example: "Pending"
-        metadata:
-          type: object
-          description: Optional account metadata
-          additionalProperties: true
-          example:
-            branch: "downtown"
-            referredBy: "existing-customer"
-      additionalProperties: false
-
-    UpdateStatusRequest:
-      type: object
-      description: Request to update account status
-      required:
-        - status
-        - reason
-      properties:
-        status:
-          $ref: '#/components/schemas/AccountStatus'
-        reason:
-          type: string
-          description: Reason for the status change
-          minLength: 1
-          maxLength: 500
-          example: "Account verification completed"
-        effectiveDate:
-          type: string
-          format: date-time
-          description: When the status change takes effect (defaults to now)
-          example: "2024-01-15T10:30:00Z"
-      additionalProperties: false
-
-    DepositRequest:
-      type: object
-      description: Request to deposit money with transaction type
-      required:
-        - amount
-        - transactionType
-        - description
-      properties:
-        amount:
-          type: number
-          format: double
-          description: Amount to deposit in account currency
-          minimum: 0.01
-          example: 250.00
-        transactionType:
-          $ref: '#/components/schemas/TransactionType'
-        description:
-          type: string
-          description: Description of the deposit
-          maxLength: 200
-          example: "Salary deposit"
-        referenceId:
-          type: string
-          description: External reference ID for the transaction
-          maxLength: 50
-          example: "PAY-2024-001"
-        metadata:
-          type: object
-          description: Additional transaction metadata
-          additionalProperties: true
-          example:
-            source: "payroll"
-            batchId: "batch-001"
-      additionalProperties: false
-
-    WithdrawRequest:
-      type: object
-      description: Request to withdraw money with transaction type
-      required:
-        - amount
-        - transactionType
-        - description
-      properties:
-        amount:
-          type: number
-          format: double
-          description: Amount to withdraw in account currency
-          minimum: 0.01
-          example: 50.00
-        transactionType:
-          $ref: '#/components/schemas/TransactionType'
-        description:
-          type: string
-          description: Description of the withdrawal
-          maxLength: 200
-          example: "ATM withdrawal"
-        referenceId:
-          type: string
-          description: External reference ID for the transaction
-          maxLength: 50
-          example: "ATM-2024-001"
-        metadata:
-          type: object
-          description: Additional transaction metadata
-          additionalProperties: true
-          example:
-            atmId: "ATM-001"
-            location: "downtown-branch"
-      additionalProperties: false
-
-    Transaction:
-      type: object
-      description: A single financial transaction with enum-based categorization
-      required:
-        - transactionId
-        - type
-        - amount
-        - timestamp
-        - description
-      properties:
-        transactionId:
-          type: string
-          description: Unique transaction identifier
-          example: "txn-001"
-        type:
-          $ref: '#/components/schemas/TransactionType'
-        amount:
-          type: number
-          format: double
-          description: Transaction amount (positive for credits, negative for debits)
-          example: 250.00
-        timestamp:
-          type: string
-          format: date-time
-          description: When the transaction occurred
-          example: "2024-01-15T10:30:00Z"
-        description:
-          type: string
-          description: Transaction description
-          example: "Salary deposit"
-        referenceId:
-          type: string
-          description: External reference ID
-          example: "PAY-2024-001"
-        balanceAfter:
-          type: number
-          format: double
-          description: Account balance after this transaction
-          example: 1250.50
-        metadata:
-          type: object
-          description: Additional transaction metadata
-          additionalProperties: true
-          example:
-            source: "payroll"
-            processed_by: "system"
-      additionalProperties: false
-
-    TransactionHistory:
-      type: object
-      description: Transaction history with enum-based filtering capabilities
-      required:
-        - accountId
-        - transactions
-        - totalCount
-      properties:
-        accountId:
-          type: string
-          description: Account identifier
-          example: "account-123"
-        transactions:
-          type: array
-          description: List of transactions in chronological order
-          items:
-            $ref: '#/components/schemas/Transaction'
-        totalCount:
-          type: integer
-          description: Total number of transactions (may be more than returned)
-          minimum: 0
-          example: 25
-        filteredBy:
-          $ref: '#/components/schemas/TransactionType'
-          description: Transaction type filter applied (if any)
-        currency:
-          $ref: '#/components/schemas/Currency'
-          description: Account currency for all transactions
-        summary:
-          type: object
-          description: Summary statistics by transaction type
-          properties:
-            byType:
-              type: object
-              description: Count and total amount by transaction type
-              additionalProperties:
-                type: object
-                properties:
-                  count:
-                    type: integer
-                    minimum: 0
-                  totalAmount:
-                    type: number
-                    format: double
-              example:
-                Deposit:
-                  count: 15
-                  totalAmount: 2500.00
-                Withdrawal:
-                  count: 10
-                  totalAmount: -1249.50
-      additionalProperties: false
-
-    AccountEvent:
-      type: object
-      description: A single account event with enum-based event types
-      required:
-        - eventId
-        - eventType
-        - timestamp
-        - data
-      properties:
-        eventId:
-          type: string
-          description: Unique event identifier
-          example: "evt-001"
-        eventType:
-          $ref: '#/components/schemas/EventType'
-        timestamp:
-          type: string
-          format: date-time
-          description: When the event occurred
-          example: "2024-01-15T10:30:00Z"
-        data:
-          type: object
-          description: Event-specific data (varies by event type)
-          additionalProperties: true
-          example:
-            amount: 250.00
-            transactionType: "Deposit"
-            description: "Salary deposit"
-        metadata:
-          type: object
-          description: Additional event metadata
-          additionalProperties: true
-          example:
-            correlationId: "corr-001"
-            userId: "user-123"
       additionalProperties: false
