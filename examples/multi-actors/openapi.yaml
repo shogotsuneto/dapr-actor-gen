@@ -221,13 +221,39 @@ components:
       description: Current state of the counter actor (state-based)
       required:
         - value
+        - status
       properties:
         value:
           type: integer
           format: int32
           description: The current counter value
           example: 42
+        status:
+          $ref: '#/components/schemas/CounterStatus'
+        lastOperation:
+          $ref: '#/components/schemas/CounterOperation'
       additionalProperties: false
+
+    CounterStatus:
+      type: string
+      description: Current status of the counter
+      enum:
+        - active
+        - paused
+        - error
+        - reset
+      example: active
+
+    CounterOperation:
+      type: string
+      description: Type of the last operation performed on the counter
+      enum:
+        - increment
+        - decrement
+        - set
+        - get
+        - reset
+      example: increment
 
     SetValueRequest:
       type: object
