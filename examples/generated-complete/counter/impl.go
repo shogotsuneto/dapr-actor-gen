@@ -9,6 +9,7 @@ import (
 	"context"
 	"log"
 	"sync"
+
 	"github.com/dapr/go-sdk/actor"
 )
 
@@ -62,13 +63,18 @@ func (a *Counter) setValue(ctx context.Context, value int32) {
 	a.value = value
 }
 
+
 // Decrement decrements counter by 1
 func (a *Counter) Decrement(ctx context.Context) (*CounterState, error) {
 	currentValue := a.getCurrentValue(ctx)
 	newValue := currentValue - 1
 	a.setValue(ctx, newValue)
 	
-	return &CounterState{Value: newValue}, nil
+	return &CounterState{
+		Value:         newValue,
+		Status:        CounterStatusactive,
+		LastOperation: CounterOperationdecrement,
+	}, nil
 }
 
 // Get gets current counter value
@@ -78,7 +84,11 @@ func (a *Counter) Get(ctx context.Context) (*CounterState, error) {
 	
 	value := a.getCurrentValue(ctx)
 	log.Printf("[Counter] Current value retrieved: %d", value)
-	return &CounterState{Value: value}, nil
+	return &CounterState{
+		Value:         value,
+		Status:        CounterStatusactive,
+		LastOperation: CounterOperationget,
+	}, nil
 }
 
 // Increment increments counter by 1
@@ -91,11 +101,19 @@ func (a *Counter) Increment(ctx context.Context) (*CounterState, error) {
 	a.setValue(ctx, newValue)
 	
 	log.Printf("[Counter] Incremented from %d to %d", currentValue, newValue)
-	return &CounterState{Value: newValue}, nil
+	return &CounterState{
+		Value:         newValue,
+		Status:        CounterStatusactive,
+		LastOperation: CounterOperationincrement,
+	}, nil
 }
 
 // Set sets counter to specific value
 func (a *Counter) Set(ctx context.Context, request SetValueRequest) (*CounterState, error) {
 	a.setValue(ctx, request.Value)
-	return &CounterState{Value: request.Value}, nil
+	return &CounterState{
+		Value:         request.Value,
+		Status:        CounterStatusactive,
+		LastOperation: CounterOperationset,
+	}, nil
 }

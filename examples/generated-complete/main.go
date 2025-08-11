@@ -86,8 +86,8 @@ func main() {
 	
 	// Create a Dapr service with our custom Chi router
 	// This demonstrates how to use Chi router instead of the default mux
-	// Note: For basic usage without custom router, use: s := daprd.NewService(":8080")
 	s := daprd.NewServiceWithMux(":8080", r)
+	// Note: For basic usage without custom router, use: s := daprd.NewService(":8080")
 
 	// Register all generated actors
 
