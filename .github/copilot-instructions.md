@@ -61,7 +61,12 @@ Always reference these instructions first and fallback to search or bash command
   - Lint code: `go vet ./...`
 
 - **When generator logic or example OpenAPI specs change:**
+  - **Before regenerating:** Remove any existing impl.go files: `find examples/multi-actors/generated -name "impl.go" -delete`
   - Regenerate example code: `./bin/dapr-actor-gen --generate-impl --generate-example examples/multi-actors/openapi.yaml examples/multi-actors/generated`
+  - **Compare with reference implementations:** For each actor type, compare exported functions between `actor.go` (reference) and `impl.go` (newly generated):
+    - `go doc -u ./examples/multi-actors/generated/[actortype]/` to see all exported functions
+    - Ensure `actor.go` implements all methods that `impl.go` expects from the API interface
+    - Update `actor.go` if the API interface has changed (new methods, different signatures)
   - Verify the regenerated example compiles: `cd examples/multi-actors/generated && go mod tidy && go build ./...`
   - Update any documentation that references the generated code structure
 
@@ -141,10 +146,13 @@ output/
 │   ├── api.go          # Actor interface with Dapr integration
 │   ├── types.go        # Type definitions from OpenAPI schemas
 │   ├── factory.go      # Factory functions for registration
-│   └── impl.go         # Implementation stubs (if --generate-impl)
+│   ├── impl.go         # Implementation stubs (if --generate-impl) - gitignored
+│   └── actor.go        # Reference implementation (manually maintained)
 ├── main.go             # Example application (if --generate-example)
 └── go.mod              # Go module for example (if --generate-example)
 ```
+
+**Note**: `impl.go` files are generated stubs and gitignored. Use `actor.go` for reference implementations that should be maintained manually and not overwritten by code generation.
 
 ## Key Go Dependencies
 

@@ -7,6 +7,11 @@ dist/
 # Generated code
 generated/
 test-generated/
+# But allow examples/multi-actors/generated/ for documentation
+!examples/multi-actors/generated/**
+
+# Generated implementation stubs (use actor.go for reference implementations)
+**/impl.go
 
 # Go build artifacts
 *.exe
