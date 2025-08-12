@@ -48,18 +48,7 @@ make build
 ./bin/dapr-actor-gen --generate-impl --generate-example examples/multi-actors/openapi.yaml examples/multi-actors/generated
 ```
 
-### 3. Prepare the Generated Code
 
-```bash
-# Navigate to the generated directory
-cd examples/multi-actors/generated
-
-# Download dependencies
-go mod tidy
-
-# Verify the code compiles
-go build ./...
-```
 
 ## Running the Example
 
@@ -74,7 +63,7 @@ cd examples/multi-actors/generated
 # Install dependencies (if not already done)
 go mod tidy
 
-# Start Dapr sidecar in one terminal
+# Start Dapr sidecar in one terminal (run 'dapr init' if Dapr is not initialized, 'dapr uninstall --all' to clean up)
 dapr run --app-id example-actors --app-port 8080 --dapr-http-port 3500
 
 # Start the application in another terminal
