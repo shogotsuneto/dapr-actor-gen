@@ -13,7 +13,21 @@ This tool enables schema-first development for Dapr actors by generating Go code
 
 ## Quick Start
 
-### 1. Build the Generator
+### Option 1: Using Docker (Recommended)
+
+```bash
+# Pull and use the latest pre-built image
+docker pull ghcr.io/shogotsuneto/dapr-actor-gen:latest
+
+# Generate code from OpenAPI schema
+docker run --rm \
+  -v $(pwd)/examples:/examples \
+  -v $(pwd)/output:/output \
+  ghcr.io/shogotsuneto/dapr-actor-gen:latest \
+  /examples/multi-actors/openapi.yaml /output
+```
+
+### Option 2: Build from Source
 
 ```bash
 # Clone the repository
@@ -22,13 +36,7 @@ cd dapr-actor-gen
 
 # Build the generator binary
 make build
-```
 
-This will build `dapr-actor-gen` and place it in `bin/`.
-
-### 2. Generate Code from OpenAPI Schema
-
-```bash
 # Use the binary directly to generate from the example schema
 ./bin/dapr-actor-gen examples/multi-actors/openapi.yaml ./generated
 ```
@@ -123,13 +131,12 @@ info:
   version: 1.0.0
 
 paths:
-  # Actor methods are defined as paths
-  /counter/{id}/increment:
+  # Actor methods follow the pattern: /{actorType}/{actorId}/method/{methodName}
+  /Counter/{actorId}/method/Increment:
     post:
-      operationId: increment
-      x-actor-type: counter      # Required: specifies the actor type
+      summary: Increment counter by 1
       parameters:
-        - name: id
+        - name: actorId
           in: path
           required: true
           schema:
@@ -147,14 +154,15 @@ components:
     CounterState:
       type: object
       properties:
-        count:
+        value:
           type: integer
 ```
 
 Key requirements:
-- Use `x-actor-type` extension to specify which actor type the method belongs to
-- Actor ID should be a path parameter named `id`
-- Method names come from `operationId`
+- Paths must follow the pattern: `/{actorType}/{actorId}/method/{methodName}`
+- Actor type is extracted from the path (e.g., "Counter" from `/Counter/{actorId}/method/Increment`)
+- Actor ID should be a path parameter (typically named `actorId`)
+- Method names are extracted from the path after `/method/`
 - Request/response schemas become Go types
 
 ## Examples
@@ -167,13 +175,42 @@ The `examples/` directory contains:
 ## Command Line Usage
 
 ```bash
-dapr-actor-gen <openapi-file> <output-directory>
+dapr-actor-gen [flags] <openapi-file> <output-directory>
 ```
 
 ### Arguments
 
 - `openapi-file`: Path to your OpenAPI 3.0 specification file (YAML or JSON)
 - `output-directory`: Directory where generated code will be placed
+
+### Options
+
+- `--generate-impl`: Generate partial implementation stubs with not-implemented errors
+- `--generate-example`: Generate example main.go, go.mod and other files for a complete app
+
+### Usage Examples
+
+```bash
+# Generate interfaces only (default behavior)
+dapr-actor-gen openapi.yaml ./output
+
+# Generate interfaces + partial implementations
+dapr-actor-gen --generate-impl openapi.yaml ./output
+
+# Generate interfaces + example application
+dapr-actor-gen --generate-example openapi.yaml ./output
+
+# Generate everything together
+dapr-actor-gen --generate-impl --generate-example openapi.yaml ./output
+```
+
+#### Partial Implementation Generation (`--generate-impl`)
+
+Generates stub implementations alongside the existing API definitions. This creates `impl.go` files with method stubs that return not-implemented errors.
+
+#### Example Application Generation (`--generate-example`)
+
+Creates a complete, compilable Dapr application with `main.go` and `go.mod` that demonstrates how to register and use the generated actors.
 
 ### Generated File Structure
 
@@ -233,21 +270,15 @@ go test ./...
 
 ## Docker
 
-The project includes a Dockerfile for containerization:
+For local Docker builds:
 
 ```bash
 # Build Docker image
 docker build -t dapr-actor-gen .
 
-# Run in container
+# Run locally built image
 docker run --rm -v $(pwd)/examples:/examples -v $(pwd)/output:/output \
   dapr-actor-gen /examples/multi-actors/openapi.yaml /output
-```
-
-Pre-built Docker images are available from GitHub Container Registry:
-
-```bash
-docker pull ghcr.io/shogotsuneto/dapr-actor-gen:latest
 ```
 
 ## Releases
@@ -277,4 +308,4 @@ Releases can only be created from the `main` branch by maintainers:
 
 ## License
 
-[Add your license information here]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

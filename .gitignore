@@ -7,6 +7,11 @@ dist/
 # Generated code
 generated/
 test-generated/
+# But allow examples/multi-actors/generated/ for documentation
+!examples/multi-actors/generated/**
+
+# Generated implementation stubs (use actor.go for reference implementations)
+**/impl.go
 
 # Go build artifacts
 *.exe
@@ -17,6 +22,9 @@ test-generated/
 
 # Test binary, built with `go test -c`
 *.test
+
+# Compiled binaries in examples
+examples/*/[!*.]*
 
 # Output of the go coverage tool
 *.out
@@ -30,6 +38,7 @@ go.work
 # Test output directories
 test-output/
 *-test-output/
+validation-output/
 
 # IDE and editor files
 .vscode/

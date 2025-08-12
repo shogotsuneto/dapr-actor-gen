@@ -11,7 +11,7 @@ import (
 type Generator struct{}
 
 // GenerateActorPackages generates actor-specific packages from the intermediate model
-func (g *Generator) GenerateActorPackages(model *GenerationModel, baseOutputDir string) error {
+func (g *Generator) GenerateActorPackages(model *GenerationModel, baseOutputDir string, options GenerationOptions) error {
 	if len(model.Actors) == 0 {
 		return fmt.Errorf("no actors found in the model")
 	}
@@ -58,10 +58,29 @@ func (g *Generator) GenerateActorPackages(model *GenerationModel, baseOutputDir 
 			return fmt.Errorf("failed to generate factory for %s: %v", actor.ActorType, err)
 		}
 
+		// Optionally generate partial implementation
+		if options.GenerateImpl {
+			err = g.generatePartialImplementation(&actorModel, outputDir)
+			if err != nil {
+				return fmt.Errorf("failed to generate partial implementation for %s: %v", actor.ActorType, err)
+			}
+		}
+
 		fmt.Printf("Generated actor package: %s\n", outputDir)
 		fmt.Printf("  %s/types.go\n", outputDir)
 		fmt.Printf("  %s/api.go\n", outputDir)
 		fmt.Printf("  %s/factory.go\n", outputDir)
+		if options.GenerateImpl {
+			fmt.Printf("  %s/impl.go\n", outputDir)
+		}
+	}
+
+	// Optionally generate example application
+	if options.GenerateExample {
+		err := g.generateExampleApplication(model, baseOutputDir)
+		if err != nil {
+			return fmt.Errorf("failed to generate example application: %v", err)
+		}
 	}
 
 	return nil
@@ -78,9 +97,11 @@ func (g *Generator) generateActorTypes(actorModel *ActorModel, outputDir string)
 	processedTypes := TypeDefinitions{
 		Structs: make([]StructType, len(actorModel.Types.Structs)),
 		Aliases: make([]TypeAlias, len(actorModel.Types.Aliases)),
+		Enums:   make([]EnumType, len(actorModel.Types.Enums)),
 	}
 	copy(processedTypes.Structs, actorModel.Types.Structs)
 	copy(processedTypes.Aliases, actorModel.Types.Aliases)
+	copy(processedTypes.Enums, actorModel.Types.Enums)
 
 	// Generate types file
 	data := struct {
@@ -155,6 +176,111 @@ func (g *Generator) generateActorFactory(actorModel *ActorModel, outputDir strin
 	err = tmpl.Execute(factoryFile, data)
 	if err != nil {
 		return fmt.Errorf("failed to execute factory template: %v", err)
+	}
+
+	return nil
+}
+
+func (g *Generator) generatePartialImplementation(actorModel *ActorModel, outputDir string) error {
+	// Load template from embedded filesystem
+	tmpl, err := getEmbeddedTemplate("partial_impl.tmpl")
+	if err != nil {
+		return fmt.Errorf("failed to parse partial implementation template: %v", err)
+	}
+
+	// Generate implementation file for this actor
+	data := SingleActorTemplateData{
+		PackageName: actorModel.PackageName,
+		Actor:       actorModel.ActorInterface,
+	}
+
+	implFile, err := os.Create(filepath.Join(outputDir, "impl.go"))
+	if err != nil {
+		return fmt.Errorf("failed to create implementation file: %v", err)
+	}
+	defer implFile.Close()
+
+	err = tmpl.Execute(implFile, data)
+	if err != nil {
+		return fmt.Errorf("failed to execute partial implementation template: %v", err)
+	}
+
+	return nil
+}
+
+func (g *Generator) generateExampleApplication(model *GenerationModel, baseOutputDir string) error {
+	// Generate main.go
+	err := g.generateExampleMain(model, baseOutputDir)
+	if err != nil {
+		return fmt.Errorf("failed to generate example main.go: %v", err)
+	}
+
+	// Generate go.mod
+	err = g.generateExampleGoMod(model, baseOutputDir)
+	if err != nil {
+		return fmt.Errorf("failed to generate example go.mod: %v", err)
+	}
+
+	fmt.Printf("Generated example application files:\n")
+	fmt.Printf("  %s/main.go\n", baseOutputDir)
+	fmt.Printf("  %s/go.mod\n", baseOutputDir)
+
+	return nil
+}
+
+func (g *Generator) generateExampleMain(model *GenerationModel, baseOutputDir string) error {
+	// Load template from embedded filesystem
+	tmpl, err := getEmbeddedTemplate("example_main.tmpl")
+	if err != nil {
+		return fmt.Errorf("failed to parse example main template: %v", err)
+	}
+
+	// Generate main.go file
+	data := struct {
+		Actors     []ActorInterface
+		ModuleName string
+	}{
+		Actors:     model.Actors,
+		ModuleName: "example-dapr-actors",
+	}
+
+	mainFile, err := os.Create(filepath.Join(baseOutputDir, "main.go"))
+	if err != nil {
+		return fmt.Errorf("failed to create main.go file: %v", err)
+	}
+	defer mainFile.Close()
+
+	err = tmpl.Execute(mainFile, data)
+	if err != nil {
+		return fmt.Errorf("failed to execute example main template: %v", err)
+	}
+
+	return nil
+}
+
+func (g *Generator) generateExampleGoMod(model *GenerationModel, baseOutputDir string) error {
+	// Load template from embedded filesystem
+	tmpl, err := getEmbeddedTemplate("example_gomod.tmpl")
+	if err != nil {
+		return fmt.Errorf("failed to parse example go.mod template: %v", err)
+	}
+
+	// Generate go.mod file
+	data := struct {
+		ModuleName string
+	}{
+		ModuleName: "example-dapr-actors",
+	}
+
+	goModFile, err := os.Create(filepath.Join(baseOutputDir, "go.mod"))
+	if err != nil {
+		return fmt.Errorf("failed to create go.mod file: %v", err)
+	}
+	defer goModFile.Close()
+
+	err = tmpl.Execute(goModFile, data)
+	if err != nil {
+		return fmt.Errorf("failed to execute example go.mod template: %v", err)
 	}
 
 	return nil

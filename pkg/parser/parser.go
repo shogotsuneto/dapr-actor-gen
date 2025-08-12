@@ -56,18 +56,41 @@ func (p *OpenAPIParser) parseAndCategorizeTypes(model *generator.GenerationModel
 func (p *OpenAPIParser) parseTypes() (generator.TypeDefinitions, error) {
 	var allStructs []generator.StructType
 	var allAliases []generator.TypeAlias
+	var allEnums []generator.EnumType
 
 	if p.doc.Components == nil || p.doc.Components.Schemas == nil {
 		return generator.TypeDefinitions{
 			Structs: allStructs,
 			Aliases: allAliases,
+			Enums:   allEnums,
 		}, nil
 	}
 
-	// Parse struct types and type aliases from schemas
+	// Parse struct types, type aliases, and enums from schemas
 	for name, schemaRef := range p.doc.Components.Schemas {
 		schema := schemaRef.Value
-		
+
+		// Check if this is an enum type
+		if schema.Enum != nil && len(schema.Enum) > 0 {
+			// This is an enum type
+			baseType := getGoType(schema)
+			var enumValues []string
+			for _, enumValue := range schema.Enum {
+				if str, ok := enumValue.(string); ok {
+					enumValues = append(enumValues, str)
+				}
+			}
+			if len(enumValues) > 0 {
+				allEnums = append(allEnums, generator.EnumType{
+					Name:        name,
+					Description: schema.Description,
+					BaseType:    baseType,
+					Values:      enumValues,
+				})
+				continue // Skip other processing for enums
+			}
+		}
+
 		// Check if this should be a type alias (simple type without properties or with only basic properties)
 		if !schema.Type.Is("object") || schema.Properties == nil || len(schema.Properties) == 0 {
 			// This should be a type alias
@@ -79,12 +102,35 @@ func (p *OpenAPIParser) parseTypes() (generator.TypeDefinitions, error) {
 				OriginalName: name,
 			})
 		} else if schema.Type.Is("object") && schema.Properties != nil {
-			// Generate struct type
-			fields := []generator.Field{}
-			
+			// First pass: extract enum fields and create enum types
 			for propName, propRef := range schema.Properties {
 				prop := propRef.Value
-				
+				if prop.Type.Is("string") && prop.Enum != nil && len(prop.Enum) > 0 {
+					// This is an enum field, create a separate enum type
+					enumTypeName := name + capitalizeFirst(propName)
+					var enumValues []string
+					for _, enumValue := range prop.Enum {
+						if str, ok := enumValue.(string); ok {
+							enumValues = append(enumValues, str)
+						}
+					}
+					if len(enumValues) > 0 {
+						allEnums = append(allEnums, generator.EnumType{
+							Name:        enumTypeName,
+							Description: fmt.Sprintf("defines valid values for %s.%s", name, propName),
+							BaseType:    "string",
+							Values:      enumValues,
+						})
+					}
+				}
+			}
+
+			// Second pass: generate struct type with proper field types
+			fields := []generator.Field{}
+
+			for propName, propRef := range schema.Properties {
+				prop := propRef.Value
+
 				// Check if this property is a reference to another schema
 				var goType string
 				if propRef.Ref != "" {
@@ -96,9 +142,23 @@ func (p *OpenAPIParser) parseTypes() (generator.TypeDefinitions, error) {
 						goType = getGoType(prop)
 					}
 				} else {
-					goType = getGoType(prop)
+					// Handle special case for arrays with referenced items
+					if prop.Type.Is("array") && prop.Items != nil && prop.Items.Ref != "" {
+						// Extract referenced type name from items.$ref
+						refParts := strings.Split(prop.Items.Ref, "/")
+						if len(refParts) > 0 {
+							goType = "[]" + refParts[len(refParts)-1]
+						} else {
+							goType = getGoType(prop)
+						}
+					} else if prop.Type.Is("string") && prop.Enum != nil && len(prop.Enum) > 0 {
+						// This is an enum field, use the generated enum type
+						goType = name + capitalizeFirst(propName)
+					} else {
+						goType = getGoType(prop)
+					}
 				}
-				
+
 				jsonTag := propName
 				if !contains(schema.Required, propName) {
 					jsonTag += ",omitempty"
@@ -153,6 +213,7 @@ func (p *OpenAPIParser) parseTypes() (generator.TypeDefinitions, error) {
 	return generator.TypeDefinitions{
 		Structs: allStructs,
 		Aliases: allAliases,
+		Enums:   allEnums,
 	}, nil
 }
 
@@ -173,6 +234,11 @@ func (p *OpenAPIParser) sortTypes(types *generator.TypeDefinitions) {
 	// Sort all aliases by name
 	sort.Slice(types.Aliases, func(i, j int) bool {
 		return types.Aliases[i].Name < types.Aliases[j].Name
+	})
+
+	// Sort all enums by name
+	sort.Slice(types.Enums, func(i, j int) bool {
+		return types.Enums[i].Name < types.Enums[j].Name
 	})
 }
 
@@ -363,7 +429,7 @@ func (p *OpenAPIParser) extractActorTypeFromPath(path string) string {
 	if len(parts) < 4 || parts[0] != "" { // paths should start with /
 		return ""
 	}
-	
+
 	// Find the position of "method" in the path
 	methodIndex := -1
 	for i, part := range parts {
@@ -372,13 +438,13 @@ func (p *OpenAPIParser) extractActorTypeFromPath(path string) string {
 			break
 		}
 	}
-	
+
 	// generator.Actor type should be 2 positions before "method"
 	// .../actorType/{actorId}/method/methodName
 	if methodIndex >= 2 {
 		return parts[methodIndex-2]
 	}
-	
+
 	return ""
 }
 
@@ -404,7 +470,7 @@ func (p *OpenAPIParser) extractReturnType(op *openapi3.Operation) string {
 					return parts[len(parts)-1]
 				}
 			}
-			
+
 			schema := jsonContent.Schema.Value
 			if schema != nil {
 				// Handle array schemas with items.$ref
@@ -430,25 +496,32 @@ func (p *OpenAPIParser) isCustomTypeInDefinitions(typeName string, types generat
 		"float32": true, "float64": true, "bool": true,
 		"interface{}": true, "map[string]interface{}": true,
 	}
-	
+
 	if builtinTypes[typeName] {
 		return false
 	}
-	
+
 	// Check if it's defined in our struct types
 	for _, structType := range types.Structs {
 		if structType.Name == typeName {
 			return true
 		}
 	}
-	
+
 	// Check if it's defined in our type aliases
 	for _, aliasType := range types.Aliases {
 		if aliasType.Name == typeName {
 			return true
 		}
 	}
-	
+
+	// Check if it's defined in our enum types
+	for _, enumType := range types.Enums {
+		if enumType.Name == typeName {
+			return true
+		}
+	}
+
 	return false
 }
 
@@ -457,15 +530,18 @@ func (p *OpenAPIParser) isCustomTypeInDefinitions(typeName string, types generat
 func (p *OpenAPIParser) categorizeTypesIntoActors(model *generator.GenerationModel, allTypes generator.TypeDefinitions) error {
 	// Create a map to track which types are used by which actors
 	typeUsage := make(map[string]map[string]bool) // type -> actor -> used
-	
-	// Initialize usage map for all types (both structs and aliases)
+
+	// Initialize usage map for all types (structs, aliases, and enums)
 	for _, structType := range allTypes.Structs {
 		typeUsage[structType.Name] = make(map[string]bool)
 	}
 	for _, aliasType := range allTypes.Aliases {
 		typeUsage[aliasType.Name] = make(map[string]bool)
 	}
-	
+	for _, enumType := range allTypes.Enums {
+		typeUsage[enumType.Name] = make(map[string]bool)
+	}
+
 	// Analyze which actors use which types by examining request/response schemas
 	for _, actor := range model.Actors {
 		for _, method := range actor.Methods {
@@ -486,8 +562,8 @@ func (p *OpenAPIParser) categorizeTypesIntoActors(model *generator.GenerationMod
 			}
 		}
 	}
-	
-	// Also analyze type dependencies - if a type references another type, 
+
+	// Also analyze type dependencies - if a type references another type,
 	// the referenced type should also be included in actors that use the referencing type
 	typeDependencies := make(map[string][]string) // type -> []referenced_types
 	for _, structType := range allTypes.Structs {
@@ -496,23 +572,28 @@ func (p *OpenAPIParser) categorizeTypesIntoActors(model *generator.GenerationMod
 			fieldType := field.Type
 			fieldType = strings.TrimPrefix(fieldType, "[]")
 			fieldType = strings.TrimPrefix(fieldType, "*")
-			
+
 			// Check if this is a custom type (not a built-in Go type)
 			if p.isCustomTypeInDefinitions(fieldType, allTypes) {
 				typeDependencies[structType.Name] = append(typeDependencies[structType.Name], fieldType)
 			}
 		}
 	}
-	
-	// Propagate usage from dependent types
-	for parentType, dependencies := range typeDependencies {
-		if parentUsage, exists := typeUsage[parentType]; exists {
-			for _, depType := range dependencies {
-				if depUsage, exists := typeUsage[depType]; exists {
-					// Copy usage from parent to dependency
-					for actor, used := range parentUsage {
-						if used {
-							depUsage[actor] = true
+
+	// Propagate usage from dependent types (iteratively to handle transitive dependencies)
+	changed := true
+	for changed {
+		changed = false
+		for parentType, dependencies := range typeDependencies {
+			if parentUsage, exists := typeUsage[parentType]; exists {
+				for _, depType := range dependencies {
+					if depUsage, exists := typeUsage[depType]; exists {
+						// Copy usage from parent to dependency
+						for actor, used := range parentUsage {
+							if used && !depUsage[actor] {
+								depUsage[actor] = true
+								changed = true
+							}
 						}
 					}
 				}
@@ -525,13 +606,14 @@ func (p *OpenAPIParser) categorizeTypesIntoActors(model *generator.GenerationMod
 		model.Actors[i].Types = generator.TypeDefinitions{
 			Structs: []generator.StructType{},
 			Aliases: []generator.TypeAlias{},
+			Enums:   []generator.EnumType{},
 		}
 	}
-	
+
 	// Assign struct types directly to each actor that uses them
 	for _, structType := range allTypes.Structs {
 		usedByActors := typeUsage[structType.Name]
-		
+
 		// Assign to each actor that uses this type
 		for actorType := range usedByActors {
 			// Find the actor and add the type to it
@@ -547,7 +629,7 @@ func (p *OpenAPIParser) categorizeTypesIntoActors(model *generator.GenerationMod
 	// Assign type aliases directly to each actor that uses them
 	for _, aliasType := range allTypes.Aliases {
 		usedByActors := typeUsage[aliasType.Name]
-		
+
 		// Assign to each actor that uses this type
 		for actorType := range usedByActors {
 			// Find the actor and add the type to it
@@ -559,7 +641,23 @@ func (p *OpenAPIParser) categorizeTypesIntoActors(model *generator.GenerationMod
 			}
 		}
 	}
-	
+
+	// Assign enum types directly to each actor that uses them
+	for _, enumType := range allTypes.Enums {
+		usedByActors := typeUsage[enumType.Name]
+
+		// Assign to each actor that uses this type
+		for actorType := range usedByActors {
+			// Find the actor and add the type to it
+			for i, actor := range model.Actors {
+				if actor.ActorType == actorType {
+					model.Actors[i].Types.Enums = append(model.Actors[i].Types.Enums, enumType)
+					break
+				}
+			}
+		}
+	}
+
 	// Sort types within each actor for consistent ordering
 	for i := range model.Actors {
 		sort.Slice(model.Actors[i].Types.Structs, func(j, k int) bool {
@@ -568,7 +666,10 @@ func (p *OpenAPIParser) categorizeTypesIntoActors(model *generator.GenerationMod
 		sort.Slice(model.Actors[i].Types.Aliases, func(j, k int) bool {
 			return model.Actors[i].Types.Aliases[j].Name < model.Actors[i].Types.Aliases[k].Name
 		})
+		sort.Slice(model.Actors[i].Types.Enums, func(j, k int) bool {
+			return model.Actors[i].Types.Enums[j].Name < model.Actors[i].Types.Enums[k].Name
+		})
 	}
-	
+
 	return nil
 }

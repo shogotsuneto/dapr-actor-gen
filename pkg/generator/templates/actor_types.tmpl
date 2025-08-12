@@ -17,3 +17,16 @@ type {{.Name}} struct {
 // {{.Name}} {{.Description}}
 type {{.Name}} = {{.AliasTarget}}
 {{end}}
+
+{{range .Types.Enums}}
+// {{.Name}} {{.Description}}
+type {{.Name}} {{.BaseType}}
+
+// {{.Name}} constants
+const (
+{{- $typeName := .Name}}
+{{- range $index, $value := .Values}}
+	{{$typeName}}{{ToPascalCase $value}} {{$typeName}} = "{{$value}}"
+{{- end}}
+)
+{{end}}

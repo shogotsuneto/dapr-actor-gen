@@ -25,10 +25,19 @@ type TypeAlias struct {
 	OriginalName string // For type aliases - original parameter name
 }
 
+// EnumType represents an enumeration type definition in the intermediate model
+type EnumType struct {
+	Name        string
+	Description string
+	BaseType    string   // underlying Go type (e.g., "string", "int")
+	Values      []string // enum constant values
+}
+
 // TypeDefinitions represents a collection of type definitions
 type TypeDefinitions struct {
 	Structs []StructType
 	Aliases []TypeAlias
+	Enums   []EnumType
 }
 
 // Method represents an actor method in the intermediate model
@@ -66,10 +75,10 @@ type GenerationModel struct {
 
 // ActorModel represents a single actor's complete model for generation
 type ActorModel struct {
-	ActorType       string
-	PackageName     string
-	Types           TypeDefinitions
-	ActorInterface  ActorInterface
+	ActorType      string
+	PackageName    string
+	Types          TypeDefinitions
+	ActorInterface ActorInterface
 }
 
 // TypesTemplateData represents data for types template generation
@@ -88,4 +97,10 @@ type InterfaceTemplateData struct {
 type SingleActorTemplateData struct {
 	PackageName string
 	Actor       ActorInterface
+}
+
+// GenerationOptions represents options for controlling what gets generated
+type GenerationOptions struct {
+	GenerateImpl    bool // Generate partial implementation stubs
+	GenerateExample bool // Generate example main.go, go.mod, etc.
 }
