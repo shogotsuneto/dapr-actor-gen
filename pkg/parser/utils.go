@@ -45,15 +45,27 @@ func getGoType(schema *openapi3.Schema) string {
 	case schema.Type.Is("string"):
 		return "string"
 	case schema.Type.Is("integer"):
-		if schema.Format == "int32" {
+		switch schema.Format {
+		case "int8":
+			return "int8"
+		case "int16":
+			return "int16"
+		case "int32":
 			return "int32"
+		case "int64":
+			return "int64"
+		default:
+			return "int"
 		}
-		return "int"
 	case schema.Type.Is("number"):
-		if schema.Format == "float" {
+		switch schema.Format {
+		case "float":
 			return "float32"
+		case "double":
+			return "float64"
+		default:
+			return "float64"
 		}
-		return "float64"
 	case schema.Type.Is("boolean"):
 		return "bool"
 	case schema.Type.Is("array"):

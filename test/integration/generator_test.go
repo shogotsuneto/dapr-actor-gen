@@ -430,3 +430,107 @@ func TestEnumGeneration(t *testing.T) {
 		}
 	}
 }
+
+func TestNumberFormatsGeneration(t *testing.T) {
+	// Load the number formats test OpenAPI spec
+	loader := openapi3.NewLoader()
+	doc, err := loader.LoadFromFile("testdata/number-formats.yaml")
+	if err != nil {
+		t.Fatalf("Failed to load number formats OpenAPI spec: %v", err)
+	}
+
+	// Parse the spec to intermediate model
+	p := parser.NewOpenAPIParser(doc)
+	model, err := p.Parse()
+	if err != nil {
+		t.Fatalf("Failed to parse OpenAPI spec: %v", err)
+	}
+
+	// Verify that we have exactly one actor
+	if len(model.Actors) != 1 {
+		t.Errorf("Expected 1 actor, got %d", len(model.Actors))
+	}
+
+	// Verify the NumberTest actor
+	actor := model.Actors[0]
+	if actor.ActorType != "NumberTest" {
+		t.Errorf("Expected actor type 'NumberTest', got '%s'", actor.ActorType)
+	}
+
+	// Find the NumberRequest and NumberResponse structs
+	var numberRequest, numberResponse *generator.StructType
+	for i := range actor.Types.Structs {
+		if actor.Types.Structs[i].Name == "NumberRequest" {
+			numberRequest = &actor.Types.Structs[i]
+		}
+		if actor.Types.Structs[i].Name == "NumberResponse" {
+			numberResponse = &actor.Types.Structs[i]
+		}
+	}
+
+	if numberRequest == nil {
+		t.Fatal("NumberRequest struct not found")
+	}
+	if numberResponse == nil {
+		t.Fatal("NumberResponse struct not found")
+	}
+
+	// Verify number format type mappings in NumberRequest
+	expectedFieldTypes := map[string]string{
+		"Int8Value":    "int8",
+		"Int16Value":   "int16",
+		"Int32Value":   "int32",
+		"Int64Value":   "int64",
+		"FloatValue":   "float32",
+		"DoubleValue":  "float64",
+		"PlainInteger": "int",
+		"PlainNumber":  "float64",
+	}
+
+	for _, field := range numberRequest.Fields {
+		if expectedType, exists := expectedFieldTypes[field.Name]; exists {
+			if field.Type != expectedType {
+				t.Errorf("Expected field %s to have type %s, got %s", field.Name, expectedType, field.Type)
+			}
+		}
+	}
+
+	// Verify number format type mappings in NumberResponse
+	expectedResponseFieldTypes := map[string]string{
+		"Int8Result":         "int8",
+		"Int16Result":        "int16",
+		"Int32Result":        "int32",
+		"Int64Result":        "int64",
+		"FloatResult":        "float32",
+		"DoubleResult":       "float64",
+		"PlainIntegerResult": "int",
+		"PlainNumberResult":  "float64",
+	}
+
+	for _, field := range numberResponse.Fields {
+		if expectedType, exists := expectedResponseFieldTypes[field.Name]; exists {
+			if field.Type != expectedType {
+				t.Errorf("Expected response field %s to have type %s, got %s", field.Name, expectedType, field.Type)
+			}
+		}
+	}
+
+	// Generate code and verify it compiles
+	gen := &generator.Generator{}
+	outputDir := "test-output/number-formats-test"
+	options := generator.GenerationOptions{
+		GenerateImpl:    false,
+		GenerateExample: false,
+	}
+	err = gen.GenerateActorPackages(model, outputDir, options)
+	if err != nil {
+		t.Fatalf("Failed to generate actor packages: %v", err)
+	}
+
+	// Clean up after test
+	defer func() {
+		os.RemoveAll(outputDir)
+	}()
+
+	t.Logf("Successfully validated number format type mappings for NumberTest actor")
+}
