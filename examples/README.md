@@ -36,16 +36,4 @@ This example demonstrates different actor patterns (state-based vs event-sourced
    go build ./...
    ```
 
-## Generation Modes
 
-- **Default**: Generates interfaces and types only (will not compile without implementations)
-- **--generate-impl**: Adds stub implementations that return "not implemented" errors
-- **--generate-example**: Adds example main.go and go.mod for a complete application
-- **Both flags**: Creates a fully functional example application
-
-## Key Benefits
-
-- **Schema-first development**: Define actors in OpenAPI, implement in Go
-- **Type safety**: Generated types match your OpenAPI schema exactly
-- **Auto-generated factories**: Ready-to-use actor registration functions
-- **Documentation**: Generated code includes comments from your OpenAPI spec

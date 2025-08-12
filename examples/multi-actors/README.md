@@ -228,8 +228,6 @@ Use `a.ID()` to get the current actor instance ID.
 - **Type safety** - Generated types match OpenAPI schema exactly
 - **Multiple patterns** - State-based and event-sourced actor implementations
 - **Custom middleware** - Chi router with logging and context enrichment
-- **Real business logic** - Working implementations, not just stubs
-- **Thread safety** - Proper concurrency handling with mutexes
 
 ## Comparison with Stub Generation
 
@@ -255,7 +253,7 @@ func (a *Counter) Increment(ctx context.Context) (*CounterState, error) {
 }
 ```
 
-The `generated/` directory demonstrates how to evolve from generated stubs to production-ready actor implementations.
+
 
 ## Troubleshooting
 
@@ -281,7 +279,4 @@ The `generated/` directory demonstrates how to evolve from generated stubs to pr
 This example shows how to:
 1. Take generated stub implementations
 2. Add real business logic using in-memory storage
-3. Implement different actor patterns (state-based vs event-sourced)
-4. Handle validation, errors, and edge cases
-5. Ensure thread-safe concurrent access
-6. Create self-contained actor implementations
+3. Create self-contained actor implementations
