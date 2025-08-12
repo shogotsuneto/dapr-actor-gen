@@ -54,8 +54,7 @@ make build
 # Navigate to the generated directory
 cd examples/multi-actors/generated
 
-# Initialize Go module and download dependencies
-go mod init your-module-name
+# Download dependencies
 go mod tidy
 
 # Verify the code compiles
