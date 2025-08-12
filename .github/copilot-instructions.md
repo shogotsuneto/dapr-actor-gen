@@ -2,7 +2,7 @@
 
 Dapr Actor Code Generator is a Go CLI tool that generates Go interfaces, types, and factory functions from OpenAPI 3.0 specifications for Dapr actors.
 
-Always reference these instructions first and fallback to search or bash commands only when you encounter unexpected information that does not match the info here.
+Always reference these instructions first and fallback to search or bash commands when you encounter unexpected information that does not match the info here, or when you need to explore unfamiliar parts of the codebase.
 
 ## Working Effectively
 
@@ -37,6 +37,19 @@ Always reference these instructions first and fallback to search or bash command
   - For compilable code: `cd ./output && go mod init test-module && go mod tidy` -- downloads Dapr dependencies, takes ~2 seconds. Set timeout to 30+ seconds.
   - `cd ./output && go build ./...` -- compiles generated code, takes ~1 second after tidy. Set timeout to 15+ seconds.
 
+## Testing Guidelines
+
+- **Unit and integration tests:** Use OpenAPI specs from `test/integration/testdata/` directory, NOT from `examples/`
+- **Manual testing and demos:** Use OpenAPI specs from `examples/` directory
+- **The `examples/` directory is for:**
+  - Manual testing and validation of the CLI tool
+  - Demonstration purposes and README examples
+  - Generating sample output for documentation
+- **The `testdata/` directory is for:**
+  - Automated unit and integration tests
+  - CI/CD validation
+  - Regression testing
+
 ## Validation Scenarios
 
 - **ALWAYS run these validation steps after making changes:**
@@ -47,6 +60,16 @@ Always reference these instructions first and fallback to search or bash command
   - Format code: `go fmt ./...`
   - Lint code: `go vet ./...`
 
+- **When generator logic or example OpenAPI specs change:**
+  - **Before regenerating:** Remove any existing impl.go files: `find examples/multi-actors/generated -name "impl.go" -delete`
+  - Regenerate example code: `./bin/dapr-actor-gen --generate-impl --generate-example examples/multi-actors/openapi.yaml examples/multi-actors/generated`
+  - **Compare with reference implementations:** For each actor type, compare exported functions between `actor.go` (reference) and `impl.go` (newly generated):
+    - `go doc -u ./examples/multi-actors/generated/[actortype]/` to see all exported functions
+    - Ensure `actor.go` implements all methods that `impl.go` expects from the API interface
+    - Update `actor.go` if the API interface has changed (new methods, different signatures)
+  - Verify the regenerated example compiles: `cd examples/multi-actors/generated && go mod tidy && go build ./...`
+  - Update any documentation that references the generated code structure
+
 - **Manual testing scenarios:**
   - Test CLI help: `./bin/dapr-actor-gen` (should show usage and exit with code 1)
   - Test basic generation with provided example OpenAPI spec (generates interfaces only - will not compile)
@@ -54,6 +77,20 @@ Always reference these instructions first and fallback to search or bash command
   - Test generation with `--generate-example` flag (generates complete example application)
   - Verify generated code structure matches expected format
   - ALWAYS test compilation of generated code with implementation stubs
+
+## Documentation Maintenance
+
+- **Before finishing any development session:**
+  - Review and update `copilot-instructions.md` if any workflows or processes have changed
+  - Keep instructions concise while maintaining essential information
+  - Update README.md if CLI usage, features, or examples have changed
+  - Verify that any referenced file paths, commands, or outputs are still accurate
+  - Remove outdated information and add new essential knowledge gained during the session
+
+- **When making changes that affect examples or generated code:**
+  - Regenerate example code in `examples/multi-actors/generated/` if the generator logic has changed
+  - Update any documentation that shows expected file structure or generated code samples
+  - Verify that CLI help text matches documented usage
 
 ## Common Tasks
 
@@ -109,10 +146,13 @@ output/
 │   ├── api.go          # Actor interface with Dapr integration
 │   ├── types.go        # Type definitions from OpenAPI schemas
 │   ├── factory.go      # Factory functions for registration
-│   └── impl.go         # Implementation stubs (if --generate-impl)
+│   ├── impl.go         # Implementation stubs (if --generate-impl) - gitignored
+│   └── actor.go        # Reference implementation (manually maintained)
 ├── main.go             # Example application (if --generate-example)
 └── go.mod              # Go module for example (if --generate-example)
 ```
+
+**Note**: `impl.go` files are generated stubs and gitignored. Use `actor.go` for reference implementations that should be maintained manually and not overwritten by code generation.
 
 ## Key Go Dependencies
 
@@ -148,6 +188,7 @@ output/
 - If generated code doesn't compile: Ensure you used `--generate-impl` flag or provide your own implementation structs
 - If factory.go shows undefined struct errors: You need implementation structs - use `--generate-impl` or create your own
 - If generated code can't find modules: Run `go mod init <module-name> && go mod tidy` in output directory
-- If tests fail: Check that example OpenAPI files exist in `examples/` directory
+- If tests fail: Check that OpenAPI files exist in `test/integration/testdata/` directory (NOT examples/)
 - If Docker build fails: Expected in restricted environments, try local build instead
 - Always clean with `make clean` if encountering persistent build issues
+- **When in doubt:** Explore the codebase and run commands to understand current state rather than relying solely on these instructions
