@@ -24,7 +24,7 @@ This example demonstrates different actor patterns (state-based vs event-sourced
    # Basic generation (interfaces only)
    ./bin/dapr-actor-gen examples/multi-actors/openapi.yaml ./output
    
-   # With implementation stubs (recommended)
+   # With implementation stubs
    ./bin/dapr-actor-gen --generate-impl examples/multi-actors/openapi.yaml ./output
    ```
 
