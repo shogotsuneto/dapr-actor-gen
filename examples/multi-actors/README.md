@@ -36,23 +36,23 @@ make build
 
 ```bash
 # Basic generation (interfaces only - will not compile)
-./bin/dapr-actor-gen examples/multi-actors/openapi.yaml ./output
+./bin/dapr-actor-gen examples/multi-actors/openapi.yaml examples/multi-actors/generated
 
 # Generate with implementation stubs (compilable but not-implemented errors)
-./bin/dapr-actor-gen --generate-impl examples/multi-actors/openapi.yaml ./output
+./bin/dapr-actor-gen --generate-impl examples/multi-actors/openapi.yaml examples/multi-actors/generated
 
 # Generate with example application
-./bin/dapr-actor-gen --generate-example examples/multi-actors/openapi.yaml ./output
+./bin/dapr-actor-gen --generate-example examples/multi-actors/openapi.yaml examples/multi-actors/generated
 
 # Generate everything (what's in the generated/ directory)
-./bin/dapr-actor-gen --generate-impl --generate-example examples/multi-actors/openapi.yaml ./output
+./bin/dapr-actor-gen --generate-impl --generate-example examples/multi-actors/openapi.yaml examples/multi-actors/generated
 ```
 
 ### 3. Prepare the Generated Code
 
 ```bash
-# Navigate to the output directory
-cd ./output
+# Navigate to the generated directory
+cd examples/multi-actors/generated
 
 # Initialize Go module and download dependencies
 go mod init your-module-name
