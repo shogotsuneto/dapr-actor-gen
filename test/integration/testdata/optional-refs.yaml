@@ -1,0 +1,67 @@
+openapi: 3.0.3
+info:
+  title: Optional Reference Test API
+  description: Test API for optional object references
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3500/v1.0/actors
+
+paths:
+  /Test/{actorId}/method/GetState:
+    get:
+      summary: Get state with optional references
+      parameters:
+        - in: path
+          name: actorId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: State with optional object references
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CounterState'
+
+components:
+  schemas:
+    CounterState:
+      type: object
+      description: Current state of the counter actor (state-based)
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+          description: Whether the operation was successful
+          example: true
+        data:
+          $ref: '#/components/schemas/CounterStateData'
+        error:
+          $ref: '#/components/schemas/Error'
+      additionalProperties: false
+
+    CounterStateData:
+      type: object
+      description: Data payload for counter state
+      properties:
+        value:
+          type: integer
+          description: The counter value
+        timestamp:
+          type: string
+          format: date-time
+          description: When the value was set
+
+    Error:
+      type: object
+      description: Error information
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
