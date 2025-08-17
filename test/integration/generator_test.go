@@ -594,7 +594,21 @@ func TestOptionalObjectReferences(t *testing.T) {
 		t.Errorf("Expected Success field to be 'bool', got '%s'", fieldTypes["Success"])
 	}
 
-	// Verify that optional object references have omitempty tag
+	// Verify optional non-struct references (type aliases) are converted to pointers
+	if fieldTypes["UserId"] != "*UserId" {
+		t.Errorf("Expected UserId field to be '*UserId', got '%s'", fieldTypes["UserId"])
+	}
+
+	if fieldTypes["SessionToken"] != "*SessionToken" {
+		t.Errorf("Expected SessionToken field to be '*SessionToken', got '%s'", fieldTypes["SessionToken"])
+	}
+
+	// Verify optional enum reference is converted to pointer
+	if fieldTypes["OperationStatus"] != "*OperationStatus" {
+		t.Errorf("Expected OperationStatus field to be '*OperationStatus', got '%s'", fieldTypes["OperationStatus"])
+	}
+
+	// Verify that optional references have omitempty tag
 	fieldTags := make(map[string]string)
 	for _, field := range counterState.Fields {
 		fieldTags[field.Name] = field.JSONTag
@@ -612,5 +626,41 @@ func TestOptionalObjectReferences(t *testing.T) {
 		t.Errorf("Expected Success field to have JSON tag 'success', got '%s'", fieldTags["Success"])
 	}
 
-	t.Logf("Successfully validated optional object references are converted to pointers")
+	// Verify non-struct optional references have omitempty tag
+	if fieldTags["UserId"] != "userId,omitempty" {
+		t.Errorf("Expected UserId field to have JSON tag 'userId,omitempty', got '%s'", fieldTags["UserId"])
+	}
+
+	if fieldTags["SessionToken"] != "sessionToken,omitempty" {
+		t.Errorf("Expected SessionToken field to have JSON tag 'sessionToken,omitempty', got '%s'", fieldTags["SessionToken"])
+	}
+
+	if fieldTags["OperationStatus"] != "operationStatus,omitempty" {
+		t.Errorf("Expected OperationStatus field to have JSON tag 'operationStatus,omitempty', got '%s'", fieldTags["OperationStatus"])
+	}
+
+	// Verify that the type aliases and enums are correctly generated in the actor types
+	aliasNames := make(map[string]bool)
+	for _, alias := range actor.Types.Aliases {
+		aliasNames[alias.Name] = true
+	}
+
+	if !aliasNames["UserId"] {
+		t.Error("Expected type alias 'UserId' not found")
+	}
+
+	if !aliasNames["SessionToken"] {
+		t.Error("Expected type alias 'SessionToken' not found")
+	}
+
+	enumNames := make(map[string]bool)
+	for _, enum := range actor.Types.Enums {
+		enumNames[enum.Name] = true
+	}
+
+	if !enumNames["OperationStatus"] {
+		t.Error("Expected enum type 'OperationStatus' not found")
+	}
+
+	t.Logf("Successfully validated optional object references and non-struct references are converted to pointers")
 }

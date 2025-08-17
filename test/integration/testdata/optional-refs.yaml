@@ -41,6 +41,14 @@ components:
           $ref: '#/components/schemas/CounterStateData'
         error:
           $ref: '#/components/schemas/Error'
+        # Optional non-struct references (type aliases)
+        userId:
+          $ref: '#/components/schemas/UserId'
+        sessionToken:
+          $ref: '#/components/schemas/SessionToken'
+        # Optional enum reference
+        operationStatus:
+          $ref: '#/components/schemas/OperationStatus'
       additionalProperties: false
 
     CounterStateData:
@@ -65,3 +73,23 @@ components:
         message:
           type: string
           description: Error message
+
+    # Type aliases (non-struct types)
+    UserId:
+      type: string
+      pattern: '^[a-zA-Z0-9_-]+$'
+      description: Unique user identifier
+
+    SessionToken:
+      type: string
+      description: Session authentication token
+
+    # Enum type
+    OperationStatus:
+      type: string
+      enum:
+        - pending
+        - completed
+        - failed
+        - cancelled
+      description: Status of an operation
