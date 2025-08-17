@@ -7,7 +7,7 @@ package counter
 // CounterState Current state of the counter actor (state-based)
 type CounterState struct {
 	// Type of the last operation performed on the counter
-	LastOperation CounterOperation `json:"lastOperation,omitempty"`
+	LastOperation *CounterOperation `json:"lastOperation,omitempty"`
 	// Current status of the counter
 	Status CounterStatus `json:"status"`
 	// The current counter value

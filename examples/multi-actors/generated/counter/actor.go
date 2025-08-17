@@ -70,10 +70,11 @@ func (a *Counter) Decrement(ctx context.Context) (*CounterState, error) {
 	newValue := currentValue - 1
 	a.setValue(ctx, newValue)
 	
+	operation := CounterOperationDecrement
 	return &CounterState{
 		Value:         newValue,
 		Status:        CounterStatusActive,
-		LastOperation: CounterOperationDecrement,
+		LastOperation: &operation,
 	}, nil
 }
 
@@ -84,10 +85,12 @@ func (a *Counter) Get(ctx context.Context) (*CounterState, error) {
 	
 	value := a.getCurrentValue(ctx)
 	log.Printf("[Counter] Current value retrieved: %d", value)
+	
+	operation := CounterOperationGet
 	return &CounterState{
 		Value:         value,
 		Status:        CounterStatusActive,
-		LastOperation: CounterOperationGet,
+		LastOperation: &operation,
 	}, nil
 }
 
@@ -101,19 +104,23 @@ func (a *Counter) Increment(ctx context.Context) (*CounterState, error) {
 	a.setValue(ctx, newValue)
 	
 	log.Printf("[Counter] Incremented from %d to %d", currentValue, newValue)
+	
+	operation := CounterOperationIncrement
 	return &CounterState{
 		Value:         newValue,
 		Status:        CounterStatusActive,
-		LastOperation: CounterOperationIncrement,
+		LastOperation: &operation,
 	}, nil
 }
 
 // Set sets counter to specific value
 func (a *Counter) Set(ctx context.Context, request SetValueRequest) (*CounterState, error) {
 	a.setValue(ctx, request.Value)
+	
+	operation := CounterOperationSet
 	return &CounterState{
 		Value:         request.Value,
 		Status:        CounterStatusActive,
-		LastOperation: CounterOperationSet,
+		LastOperation: &operation,
 	}, nil
 }
