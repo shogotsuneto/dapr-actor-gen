@@ -534,3 +534,83 @@ func TestNumberFormatsGeneration(t *testing.T) {
 
 	t.Logf("Successfully validated number format type mappings for NumberTest actor")
 }
+
+func TestOptionalObjectReferences(t *testing.T) {
+	// Load the optional references test OpenAPI spec
+	loader := openapi3.NewLoader()
+	doc, err := loader.LoadFromFile("testdata/optional-refs.yaml")
+	if err != nil {
+		t.Fatalf("Failed to load optional references OpenAPI spec: %v", err)
+	}
+
+	// Parse the spec to intermediate model
+	p := parser.NewOpenAPIParser(doc)
+	model, err := p.Parse()
+	if err != nil {
+		t.Fatalf("Failed to parse OpenAPI spec: %v", err)
+	}
+
+	// Verify that we have exactly one actor
+	if len(model.Actors) != 1 {
+		t.Errorf("Expected 1 actor, got %d", len(model.Actors))
+	}
+
+	actor := model.Actors[0]
+	if actor.ActorType != "Test" {
+		t.Errorf("Expected actor type 'Test', got '%s'", actor.ActorType)
+	}
+
+	// Find the CounterState struct
+	var counterState *generator.StructType
+	for i := range actor.Types.Structs {
+		if actor.Types.Structs[i].Name == "CounterState" {
+			counterState = &actor.Types.Structs[i]
+			break
+		}
+	}
+
+	if counterState == nil {
+		t.Fatal("CounterState struct not found")
+	}
+
+	// Verify field types - optional object references should be pointers
+	fieldTypes := make(map[string]string)
+	for _, field := range counterState.Fields {
+		fieldTypes[field.Name] = field.Type
+	}
+
+	// Data field should be a pointer to CounterStateData (optional object reference)
+	if fieldTypes["Data"] != "*CounterStateData" {
+		t.Errorf("Expected Data field to be '*CounterStateData', got '%s'", fieldTypes["Data"])
+	}
+
+	// Error field should be a pointer to Error (optional object reference)
+	if fieldTypes["Error"] != "*Error" {
+		t.Errorf("Expected Error field to be '*Error', got '%s'", fieldTypes["Error"])
+	}
+
+	// Success field should be bool (required field, not a reference)
+	if fieldTypes["Success"] != "bool" {
+		t.Errorf("Expected Success field to be 'bool', got '%s'", fieldTypes["Success"])
+	}
+
+	// Verify that optional object references have omitempty tag
+	fieldTags := make(map[string]string)
+	for _, field := range counterState.Fields {
+		fieldTags[field.Name] = field.JSONTag
+	}
+
+	if fieldTags["Data"] != "data,omitempty" {
+		t.Errorf("Expected Data field to have JSON tag 'data,omitempty', got '%s'", fieldTags["Data"])
+	}
+
+	if fieldTags["Error"] != "error,omitempty" {
+		t.Errorf("Expected Error field to have JSON tag 'error,omitempty', got '%s'", fieldTags["Error"])
+	}
+
+	if fieldTags["Success"] != "success" {
+		t.Errorf("Expected Success field to have JSON tag 'success', got '%s'", fieldTags["Success"])
+	}
+
+	t.Logf("Successfully validated optional object references are converted to pointers")
+}
