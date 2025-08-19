@@ -233,6 +233,10 @@ components:
         lastOperation:
           $ref: '#/components/schemas/CounterOperation'
       additionalProperties: false
+      example:
+        value: 42
+        status: "active"
+        # lastOperation is optional - can be null/omitted for clean JSON
 
     CounterStatus:
       type: string
