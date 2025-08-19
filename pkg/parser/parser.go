@@ -138,6 +138,10 @@ func (p *OpenAPIParser) parseTypes() (generator.TypeDefinitions, error) {
 					refParts := strings.Split(propRef.Ref, "/")
 					if len(refParts) > 0 {
 						goType = refParts[len(refParts)-1]
+						// Make optional object references pointers so omitempty works correctly
+						if !contains(schema.Required, propName) {
+							goType = "*" + goType
+						}
 					} else {
 						goType = getGoType(prop)
 					}

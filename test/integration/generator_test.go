@@ -430,3 +430,237 @@ func TestEnumGeneration(t *testing.T) {
 		}
 	}
 }
+
+func TestNumberFormatsGeneration(t *testing.T) {
+	// Load the number formats test OpenAPI spec
+	loader := openapi3.NewLoader()
+	doc, err := loader.LoadFromFile("testdata/number-formats.yaml")
+	if err != nil {
+		t.Fatalf("Failed to load number formats OpenAPI spec: %v", err)
+	}
+
+	// Parse the spec to intermediate model
+	p := parser.NewOpenAPIParser(doc)
+	model, err := p.Parse()
+	if err != nil {
+		t.Fatalf("Failed to parse OpenAPI spec: %v", err)
+	}
+
+	// Verify that we have exactly one actor
+	if len(model.Actors) != 1 {
+		t.Errorf("Expected 1 actor, got %d", len(model.Actors))
+	}
+
+	// Verify the NumberTest actor
+	actor := model.Actors[0]
+	if actor.ActorType != "NumberTest" {
+		t.Errorf("Expected actor type 'NumberTest', got '%s'", actor.ActorType)
+	}
+
+	// Find the NumberRequest and NumberResponse structs
+	var numberRequest, numberResponse *generator.StructType
+	for i := range actor.Types.Structs {
+		if actor.Types.Structs[i].Name == "NumberRequest" {
+			numberRequest = &actor.Types.Structs[i]
+		}
+		if actor.Types.Structs[i].Name == "NumberResponse" {
+			numberResponse = &actor.Types.Structs[i]
+		}
+	}
+
+	if numberRequest == nil {
+		t.Fatal("NumberRequest struct not found")
+	}
+	if numberResponse == nil {
+		t.Fatal("NumberResponse struct not found")
+	}
+
+	// Verify number format type mappings in NumberRequest
+	expectedFieldTypes := map[string]string{
+		"Int8Value":    "int8",
+		"Int16Value":   "int16",
+		"Int32Value":   "int32",
+		"Int64Value":   "int64",
+		"FloatValue":   "float32",
+		"DoubleValue":  "float64",
+		"PlainInteger": "int",
+		"PlainNumber":  "float64",
+	}
+
+	for _, field := range numberRequest.Fields {
+		if expectedType, exists := expectedFieldTypes[field.Name]; exists {
+			if field.Type != expectedType {
+				t.Errorf("Expected field %s to have type %s, got %s", field.Name, expectedType, field.Type)
+			}
+		}
+	}
+
+	// Verify number format type mappings in NumberResponse
+	expectedResponseFieldTypes := map[string]string{
+		"Int8Result":         "int8",
+		"Int16Result":        "int16",
+		"Int32Result":        "int32",
+		"Int64Result":        "int64",
+		"FloatResult":        "float32",
+		"DoubleResult":       "float64",
+		"PlainIntegerResult": "int",
+		"PlainNumberResult":  "float64",
+	}
+
+	for _, field := range numberResponse.Fields {
+		if expectedType, exists := expectedResponseFieldTypes[field.Name]; exists {
+			if field.Type != expectedType {
+				t.Errorf("Expected response field %s to have type %s, got %s", field.Name, expectedType, field.Type)
+			}
+		}
+	}
+
+	// Generate code and verify it compiles
+	gen := &generator.Generator{}
+	outputDir := "test-output/number-formats-test"
+	options := generator.GenerationOptions{
+		GenerateImpl:    false,
+		GenerateExample: false,
+	}
+	err = gen.GenerateActorPackages(model, outputDir, options)
+	if err != nil {
+		t.Fatalf("Failed to generate actor packages: %v", err)
+	}
+
+	// Clean up after test
+	defer func() {
+		os.RemoveAll(outputDir)
+	}()
+
+	t.Logf("Successfully validated number format type mappings for NumberTest actor")
+}
+
+func TestOptionalObjectReferences(t *testing.T) {
+	// Load the optional references test OpenAPI spec
+	loader := openapi3.NewLoader()
+	doc, err := loader.LoadFromFile("testdata/optional-refs.yaml")
+	if err != nil {
+		t.Fatalf("Failed to load optional references OpenAPI spec: %v", err)
+	}
+
+	// Parse the spec to intermediate model
+	p := parser.NewOpenAPIParser(doc)
+	model, err := p.Parse()
+	if err != nil {
+		t.Fatalf("Failed to parse OpenAPI spec: %v", err)
+	}
+
+	// Verify that we have exactly one actor
+	if len(model.Actors) != 1 {
+		t.Errorf("Expected 1 actor, got %d", len(model.Actors))
+	}
+
+	actor := model.Actors[0]
+	if actor.ActorType != "Test" {
+		t.Errorf("Expected actor type 'Test', got '%s'", actor.ActorType)
+	}
+
+	// Find the CounterState struct
+	var counterState *generator.StructType
+	for i := range actor.Types.Structs {
+		if actor.Types.Structs[i].Name == "CounterState" {
+			counterState = &actor.Types.Structs[i]
+			break
+		}
+	}
+
+	if counterState == nil {
+		t.Fatal("CounterState struct not found")
+	}
+
+	// Verify field types - optional object references should be pointers
+	fieldTypes := make(map[string]string)
+	for _, field := range counterState.Fields {
+		fieldTypes[field.Name] = field.Type
+	}
+
+	// Data field should be a pointer to CounterStateData (optional object reference)
+	if fieldTypes["Data"] != "*CounterStateData" {
+		t.Errorf("Expected Data field to be '*CounterStateData', got '%s'", fieldTypes["Data"])
+	}
+
+	// Error field should be a pointer to Error (optional object reference)
+	if fieldTypes["Error"] != "*Error" {
+		t.Errorf("Expected Error field to be '*Error', got '%s'", fieldTypes["Error"])
+	}
+
+	// Success field should be bool (required field, not a reference)
+	if fieldTypes["Success"] != "bool" {
+		t.Errorf("Expected Success field to be 'bool', got '%s'", fieldTypes["Success"])
+	}
+
+	// Verify optional non-struct references (type aliases) are converted to pointers
+	if fieldTypes["UserId"] != "*UserId" {
+		t.Errorf("Expected UserId field to be '*UserId', got '%s'", fieldTypes["UserId"])
+	}
+
+	if fieldTypes["SessionToken"] != "*SessionToken" {
+		t.Errorf("Expected SessionToken field to be '*SessionToken', got '%s'", fieldTypes["SessionToken"])
+	}
+
+	// Verify optional enum reference is converted to pointer
+	if fieldTypes["OperationStatus"] != "*OperationStatus" {
+		t.Errorf("Expected OperationStatus field to be '*OperationStatus', got '%s'", fieldTypes["OperationStatus"])
+	}
+
+	// Verify that optional references have omitempty tag
+	fieldTags := make(map[string]string)
+	for _, field := range counterState.Fields {
+		fieldTags[field.Name] = field.JSONTag
+	}
+
+	if fieldTags["Data"] != "data,omitempty" {
+		t.Errorf("Expected Data field to have JSON tag 'data,omitempty', got '%s'", fieldTags["Data"])
+	}
+
+	if fieldTags["Error"] != "error,omitempty" {
+		t.Errorf("Expected Error field to have JSON tag 'error,omitempty', got '%s'", fieldTags["Error"])
+	}
+
+	if fieldTags["Success"] != "success" {
+		t.Errorf("Expected Success field to have JSON tag 'success', got '%s'", fieldTags["Success"])
+	}
+
+	// Verify non-struct optional references have omitempty tag
+	if fieldTags["UserId"] != "userId,omitempty" {
+		t.Errorf("Expected UserId field to have JSON tag 'userId,omitempty', got '%s'", fieldTags["UserId"])
+	}
+
+	if fieldTags["SessionToken"] != "sessionToken,omitempty" {
+		t.Errorf("Expected SessionToken field to have JSON tag 'sessionToken,omitempty', got '%s'", fieldTags["SessionToken"])
+	}
+
+	if fieldTags["OperationStatus"] != "operationStatus,omitempty" {
+		t.Errorf("Expected OperationStatus field to have JSON tag 'operationStatus,omitempty', got '%s'", fieldTags["OperationStatus"])
+	}
+
+	// Verify that the type aliases and enums are correctly generated in the actor types
+	aliasNames := make(map[string]bool)
+	for _, alias := range actor.Types.Aliases {
+		aliasNames[alias.Name] = true
+	}
+
+	if !aliasNames["UserId"] {
+		t.Error("Expected type alias 'UserId' not found")
+	}
+
+	if !aliasNames["SessionToken"] {
+		t.Error("Expected type alias 'SessionToken' not found")
+	}
+
+	enumNames := make(map[string]bool)
+	for _, enum := range actor.Types.Enums {
+		enumNames[enum.Name] = true
+	}
+
+	if !enumNames["OperationStatus"] {
+		t.Error("Expected enum type 'OperationStatus' not found")
+	}
+
+	t.Logf("Successfully validated optional object references and non-struct references are converted to pointers")
+}

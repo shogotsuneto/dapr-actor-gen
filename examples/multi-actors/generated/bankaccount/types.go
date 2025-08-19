@@ -10,6 +10,8 @@ type AccountEvent struct {
 	Data map[string]interface{} `json:"data"`
 	// Unique event identifier
 	EventId string `json:"eventId"`
+	// Sequence number for ordering events (uses int64 for large sequences)
+	EventSequence int64 `json:"eventSequence"`
 	// Type of event
 	EventType AccountEventEventType `json:"eventType"`
 	// When the event occurred
