@@ -100,18 +100,20 @@ func main() {
 
 ## Actor Factory Registration
 
-### Using Generated Factories (Recommended for Examples)
+### Using Generated Factories
 
-When using `--generate-example`, factory functions are generated for convenience:
+When using `--generate-example`, factory functions are generated for convenience. You can use them as-is or customize them for your needs:
 
 ```go
 // Generated factory (available with --generate-example)
 s.RegisterActorImplFactoryContext(counteractor.NewActorFactory())
 ```
 
-### Using Anonymous Factories (Recommended for Production)
+The generated factory functions can also be customized by modifying the `factory.go` files in your generated code.
 
-For production use where you want to customize factories (e.g., dependency injection), register actors using anonymous factory functions:
+### Using Anonymous Factories
+
+For cases where you want to customize factories (e.g., dependency injection), register actors using anonymous factory functions:
 
 ```go
 // Anonymous factory with dependency injection
