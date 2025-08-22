@@ -1,6 +1,6 @@
 # Changelog
 
-This changelog only documents **breaking changes** that require users to update their code when upgrading. For a complete list of all changes, features, and bug fixes, please see the [GitHub Releases](https://github.com/shogotsuneto/dapr-actor-gen/releases) page.
+This changelog documents all significant changes that users should be aware of when upgrading, including breaking changes, new features, bug fixes, improvements, and deprecations.
 
 ## [v0.0.4] - 2025-08-19
 

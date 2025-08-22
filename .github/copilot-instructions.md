@@ -93,18 +93,29 @@ Always reference these instructions first and fallback to search or bash command
   - Verify that CLI help text matches documented usage
 
 - **CHANGELOG.md maintenance:**
-  - **Only document breaking changes** - CHANGELOG.md is specifically for breaking changes that require user action when upgrading
-  - For each breaking change, include:
+  - **Document all significant changes** - CHANGELOG.md tracks breaking changes, new features, bug fixes, improvements, and deprecations that users should be aware of
+  - For each entry, organize by category:
+    - **💥 BREAKING CHANGES** - Changes requiring user action when upgrading
+    - **✨ Features** - New functionality and capabilities
+    - **🐛 Bug Fixes** - Fixes for user-visible issues
+    - **⚡ Improvements** - Performance, usability, or quality improvements
+    - **⚠️ Deprecations** - Features marked for future removal
+  - For breaking changes, include:
     - Clear description of what changed
     - **Migration required** section with specific steps users must take
     - **Before/After** code examples when applicable
+  - For all entries, include:
     - Version number and date
-  - Complete feature lists and bug fixes should be documented in GitHub Releases instead
+    - Clear, user-focused description of the change
   - Update CHANGELOG.md when making any change that:
-    - Changes generated code structure or API
-    - Requires regeneration of existing projects
-    - Changes CLI flags or behavior
-    - Modifies OpenAPI schema requirements
+    - Changes generated code structure or API (breaking change)
+    - Requires regeneration of existing projects (breaking change)
+    - Changes CLI flags or behavior (feature/breaking change)
+    - Modifies OpenAPI schema requirements (breaking change)
+    - Fixes user-visible bugs (bug fix)
+    - Adds new functionality (feature)
+    - Improves performance or usability (improvement)
+    - Deprecates existing functionality (deprecation)
 
 ## Common Tasks
 
