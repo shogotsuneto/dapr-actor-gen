@@ -92,6 +92,20 @@ Always reference these instructions first and fallback to search or bash command
   - Update any documentation that shows expected file structure or generated code samples
   - Verify that CLI help text matches documented usage
 
+- **CHANGELOG.md maintenance:**
+  - **Only document breaking changes** - CHANGELOG.md is specifically for breaking changes that require user action when upgrading
+  - For each breaking change, include:
+    - Clear description of what changed
+    - **Migration required** section with specific steps users must take
+    - **Before/After** code examples when applicable
+    - Version number and date
+  - Complete feature lists and bug fixes should be documented in GitHub Releases instead
+  - Update CHANGELOG.md when making any change that:
+    - Changes generated code structure or API
+    - Requires regeneration of existing projects
+    - Changes CLI flags or behavior
+    - Modifies OpenAPI schema requirements
+
 ## Common Tasks
 
 The following are outputs from frequently run commands. Reference them instead of viewing, searching, or running bash commands to save time.
@@ -112,6 +126,7 @@ The following are outputs from frequently run commands. Reference them instead o
 │   └── parser/             # OpenAPI parsing logic
 ├── test/
 │   └── integration/        # Integration tests
+├── CHANGELOG.md            # Breaking changes documentation
 ├── Dockerfile              # Multi-stage Docker build
 ├── Makefile               # Build automation
 ├── go.mod                 # Go module definition
