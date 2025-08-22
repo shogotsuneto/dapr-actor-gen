@@ -49,12 +49,23 @@ The generator creates actor-specific packages:
 generated/
 ├── counteractor/
 │   ├── api.go          # Generated interfaces and constants
-│   ├── factory.go      # Factory functions for registration
 │   └── types.go        # Generated type definitions
 └── bankaccountactor/
     ├── api.go
-    ├── factory.go
     └── types.go
+
+# With --generate-example flag:
+generated/
+├── counteractor/
+│   ├── api.go          # Generated interfaces and constants
+│   ├── factory.go      # Factory functions for registration (example only)
+│   └── types.go        # Generated type definitions
+├── bankaccountactor/
+│   ├── api.go
+│   ├── factory.go      # Factory functions for registration (example only)
+│   └── types.go
+├── main.go             # Example application
+└── go.mod              # Go module file
 ```
 
 Implement your actor by embedding the generated interface:
@@ -86,6 +97,49 @@ func main() {
     s.Start()
 }
 ```
+
+## Actor Factory Registration
+
+### Using Generated Factories
+
+When using `--generate-example`, factory functions are generated for convenience. You can use them as-is or customize them for your needs:
+
+```go
+// Generated factory (available with --generate-example)
+s.RegisterActorImplFactoryContext(counteractor.NewActorFactory())
+```
+
+The generated factory functions can also be customized by modifying the `factory.go` files in your generated code.
+
+### Using Anonymous Factories
+
+For cases where you want to customize factories (e.g., dependency injection), register actors using anonymous factory functions:
+
+```go
+// Anonymous factory with dependency injection
+func main() {
+    s := daprd.NewService(":8080")
+    
+    // Create your dependencies
+    database := setupDatabase()
+    logger := setupLogger()
+    
+    // Register actor with custom factory
+    s.RegisterActorImplFactoryContext(func() actor.ServerContext {
+        return &CounterActor{
+            Database: database,
+            Logger:   logger,
+        }
+    })
+    
+    s.Start()
+}
+```
+
+This approach allows you to:
+- Inject dependencies into your actors
+- Customize actor initialization
+- Avoid regenerating factory code when updating your OpenAPI schema
 
 ## Available Make Targets
 
@@ -218,6 +272,8 @@ For each actor type found in your OpenAPI spec, the generator creates:
 
 - `{actortype}/api.go` - Main interface that embeds `actor.ServerContext`
 - `{actortype}/types.go` - Type definitions from OpenAPI schemas
+
+When using `--generate-example`:
 - `{actortype}/factory.go` - Factory function for Dapr registration
 
 ## Features
