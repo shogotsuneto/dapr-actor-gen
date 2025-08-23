@@ -100,13 +100,8 @@ Always reference these instructions first and fallback to search or bash command
     - **🐛 Bug Fixes** - Fixes for user-visible issues
     - **⚡ Improvements** - Performance, usability, or quality improvements
     - **⚠️ Deprecations** - Features marked for future removal
-  - For breaking changes, include:
-    - Clear description of what changed
-    - **Migration required** section with specific steps users must take
-    - **Before/After** code examples when applicable
-  - For all entries, include:
-    - Version number and date
-    - Clear, user-focused description of the change
+  - Keep entries concise with clear headlines describing the change
+  - Include version number and date for each release
   - Update CHANGELOG.md when making any change that:
     - Changes generated code structure or API (breaking change)
     - Requires regeneration of existing projects (breaking change)
@@ -137,7 +132,7 @@ The following are outputs from frequently run commands. Reference them instead o
 │   └── parser/             # OpenAPI parsing logic
 ├── test/
 │   └── integration/        # Integration tests
-├── CHANGELOG.md            # Breaking changes documentation
+├── CHANGELOG.md            # User-relevant changes documentation
 ├── Dockerfile              # Multi-stage Docker build
 ├── Makefile               # Build automation
 ├── go.mod                 # Go module definition
