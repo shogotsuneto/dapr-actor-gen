@@ -92,6 +92,27 @@ Always reference these instructions first and fallback to search or bash command
   - Update any documentation that shows expected file structure or generated code samples
   - Verify that CLI help text matches documented usage
 
+- **CHANGELOG.md maintenance:**
+  - **ALL maintainers, including Copilot, MUST add changelog entries for significant changes** - CHANGELOG.md tracks breaking changes, new features, bug fixes, improvements, and deprecations that users should be aware of
+  - **ALWAYS update CHANGELOG.md immediately when making any significant change** - Do not defer changelog updates to later commits
+  - For each entry, organize by category:
+    - **💥 BREAKING CHANGES** - Changes requiring user action when upgrading
+    - **✨ Features** - New functionality and capabilities
+    - **🐛 Bug Fixes** - Fixes for user-visible issues
+    - **⚡ Improvements** - Performance, usability, or quality improvements
+    - **⚠️ Deprecations** - Features marked for future removal
+  - Keep entries concise with clear headlines describing the change
+  - Include version number and date for each release
+  - **MANDATORY: Update CHANGELOG.md when making any change that:**
+    - Changes generated code structure or API (breaking change)
+    - Requires regeneration of existing projects (breaking change)
+    - Changes CLI flags or behavior (feature/breaking change)
+    - Modifies OpenAPI schema requirements (breaking change)
+    - Fixes user-visible bugs (bug fix)
+    - Adds new functionality (feature)
+    - Improves performance or usability (improvement)
+    - Deprecates existing functionality (deprecation)
+
 ## Common Tasks
 
 The following are outputs from frequently run commands. Reference them instead of viewing, searching, or running bash commands to save time.
@@ -112,6 +133,7 @@ The following are outputs from frequently run commands. Reference them instead o
 │   └── parser/             # OpenAPI parsing logic
 ├── test/
 │   └── integration/        # Integration tests
+├── CHANGELOG.md            # User-relevant changes documentation
 ├── Dockerfile              # Multi-stage Docker build
 ├── Makefile               # Build automation
 ├── go.mod                 # Go module definition

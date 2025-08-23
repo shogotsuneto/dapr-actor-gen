@@ -1,6 +1,7 @@
 // Package counter provides primitives for OpenAPI-based schema validation.
 //
-// Code generated from OpenAPI specification. DO NOT EDIT manually.
+// Factory functions generated from OpenAPI specification as examples.
+// These can be customized for dependency injection or other initialization needs.
 package counter
 
 import (
@@ -8,7 +9,8 @@ import (
 	"github.com/dapr/go-sdk/actor"
 )
 
-// NewActorFactory creates a factory function for Counter with a cleaner API.
+// NewActorFactory creates a factory function for Counter.
+// This is a generated example that can be customized for dependency injection.
 // Returns a factory function compatible with Dapr's RegisterActorImplFactoryContext.
 // Usage: s.RegisterActorImplFactoryContext(counter.NewActorFactory())
 func NewActorFactory() func() actor.ServerContext {

@@ -52,12 +52,6 @@ func (g *Generator) GenerateActorPackages(model *GenerationModel, baseOutputDir 
 			return fmt.Errorf("failed to generate interface for %s: %v", actor.ActorType, err)
 		}
 
-		// Generate factory for this actor
-		err = g.generateActorFactory(&actorModel, outputDir)
-		if err != nil {
-			return fmt.Errorf("failed to generate factory for %s: %v", actor.ActorType, err)
-		}
-
 		// Optionally generate partial implementation
 		if options.GenerateImpl {
 			err = g.generatePartialImplementation(&actorModel, outputDir)
@@ -69,7 +63,6 @@ func (g *Generator) GenerateActorPackages(model *GenerationModel, baseOutputDir 
 		fmt.Printf("Generated actor package: %s\n", outputDir)
 		fmt.Printf("  %s/types.go\n", outputDir)
 		fmt.Printf("  %s/api.go\n", outputDir)
-		fmt.Printf("  %s/factory.go\n", outputDir)
 		if options.GenerateImpl {
 			fmt.Printf("  %s/impl.go\n", outputDir)
 		}
@@ -221,9 +214,34 @@ func (g *Generator) generateExampleApplication(model *GenerationModel, baseOutpu
 		return fmt.Errorf("failed to generate example go.mod: %v", err)
 	}
 
+	// Generate factory files for each actor as part of the example
+	for _, actor := range model.Actors {
+		// Create actor-specific package name and directory using actorType as is
+		packageName := strings.ToLower(actor.ActorType)
+		actorOutputDir := filepath.Join(baseOutputDir, packageName)
+
+		// Create actor model for this specific actor
+		actorModel := ActorModel{
+			ActorType:      actor.ActorType,
+			PackageName:    packageName,
+			Types:          actor.Types,
+			ActorInterface: actor,
+		}
+
+		// Generate factory for this actor
+		err = g.generateActorFactory(&actorModel, actorOutputDir)
+		if err != nil {
+			return fmt.Errorf("failed to generate factory for %s: %v", actor.ActorType, err)
+		}
+	}
+
 	fmt.Printf("Generated example application files:\n")
 	fmt.Printf("  %s/main.go\n", baseOutputDir)
 	fmt.Printf("  %s/go.mod\n", baseOutputDir)
+	for _, actor := range model.Actors {
+		packageName := strings.ToLower(actor.ActorType)
+		fmt.Printf("  %s/%s/factory.go\n", baseOutputDir, packageName)
+	}
 
 	return nil
 }
