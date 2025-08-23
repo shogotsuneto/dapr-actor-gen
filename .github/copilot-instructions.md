@@ -93,13 +93,14 @@ Always reference these instructions first and fallback to search or bash command
   - Verify that CLI help text matches documented usage
 
 - **CHANGELOG.md maintenance:**
-  - **ALL maintainers, including Copilot, MUST add changelog entries for significant changes** - CHANGELOG.md tracks breaking changes, new features, bug fixes, improvements, and deprecations that users should be aware of
-  - **ALWAYS update CHANGELOG.md immediately when making any significant change** - Do not defer changelog updates to later commits
+  - **ALL maintainers, including Copilot, MUST add changelog entries for USER-RELEVANT changes only** - CHANGELOG.md tracks breaking changes, new features, bug fixes, improvements, and deprecations that users should be aware of
+  - **ALWAYS update CHANGELOG.md immediately when making any significant USER-FACING change** - Do not defer changelog updates to later commits
+  - **DO NOT include internal changes** - CI/CD pipeline fixes, build system changes, development workflow improvements, documentation updates, and other internal maintenance are NOT user-relevant and should NOT be in the changelog
   - For each entry, organize by category:
     - **💥 BREAKING CHANGES** - Changes requiring user action when upgrading
     - **✨ Features** - New functionality and capabilities
-    - **🐛 Bug Fixes** - Fixes for user-visible issues
-    - **⚡ Improvements** - Performance, usability, or quality improvements
+    - **🐛 Bug Fixes** - Fixes for user-visible issues (CLI behavior, generated code bugs, etc.)
+    - **⚡ Improvements** - Performance, usability, or quality improvements that users will notice
     - **⚠️ Deprecations** - Features marked for future removal
   - Keep entries concise with clear headlines describing the change
   - Include version number and date for each release
@@ -108,10 +109,17 @@ Always reference these instructions first and fallback to search or bash command
     - Requires regeneration of existing projects (breaking change)
     - Changes CLI flags or behavior (feature/breaking change)
     - Modifies OpenAPI schema requirements (breaking change)
-    - Fixes user-visible bugs (bug fix)
-    - Adds new functionality (feature)
-    - Improves performance or usability (improvement)
+    - Fixes user-visible bugs in CLI tool or generated code (bug fix)
+    - Adds new functionality that users can access (feature)
+    - Improves performance or usability that users will notice (improvement)
     - Deprecates existing functionality (deprecation)
+  - **DO NOT update CHANGELOG.md for:**
+    - GitHub Actions workflow fixes or changes
+    - Build system improvements (Makefile, Docker, etc.)
+    - Development environment setup changes
+    - Internal documentation updates (README formatting, typos, etc.)
+    - Repository maintenance (dependency updates that don't affect functionality)
+    - Code refactoring that doesn't change user-facing behavior
 
 ## Common Tasks
 
