@@ -93,7 +93,8 @@ Always reference these instructions first and fallback to search or bash command
   - Verify that CLI help text matches documented usage
 
 - **CHANGELOG.md maintenance:**
-  - **Document all significant changes** - CHANGELOG.md tracks breaking changes, new features, bug fixes, improvements, and deprecations that users should be aware of
+  - **ALL maintainers, including Copilot, MUST add changelog entries for significant changes** - CHANGELOG.md tracks breaking changes, new features, bug fixes, improvements, and deprecations that users should be aware of
+  - **ALWAYS update CHANGELOG.md immediately when making any significant change** - Do not defer changelog updates to later commits
   - For each entry, organize by category:
     - **💥 BREAKING CHANGES** - Changes requiring user action when upgrading
     - **✨ Features** - New functionality and capabilities
@@ -102,7 +103,7 @@ Always reference these instructions first and fallback to search or bash command
     - **⚠️ Deprecations** - Features marked for future removal
   - Keep entries concise with clear headlines describing the change
   - Include version number and date for each release
-  - Update CHANGELOG.md when making any change that:
+  - **MANDATORY: Update CHANGELOG.md when making any change that:**
     - Changes generated code structure or API (breaking change)
     - Requires regeneration of existing projects (breaking change)
     - Changes CLI flags or behavior (feature/breaking change)
