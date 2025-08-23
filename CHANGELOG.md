@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.0.5] - 2025-08-23
+
 ### ✨ Features
 
 - **Enhanced release pipeline with changelog integration**: Release workflow now extracts changelog content from "Unreleased" section for better release notes and automatically creates a PR to update CHANGELOG.md format
