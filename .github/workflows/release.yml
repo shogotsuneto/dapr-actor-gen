@@ -261,7 +261,6 @@ jobs:
           ### Changes Made
           - Updated CHANGELOG.md format for release ${{ github.event.inputs.version }}
           - Ready for next development cycle" \
-            --label "documentation,release" \
             --base main \
             --head update-changelog-${{ github.event.inputs.version }}
         env:
