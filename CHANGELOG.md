@@ -4,10 +4,6 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-### 🐛 Bug Fixes
-
-- **Release pipeline workflow**: Fixed release pipeline to create changelog update PRs targeting develop branch instead of main, and added automatic merge of main back to develop after releases
-
 ## [0.0.5] - 2025-08-23
 
 ### ✨ Features
@@ -26,4 +22,4 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-*Changes are documented here starting from v0.0.4. For earlier versions, please refer to the release notes.*
+_Changes are documented here starting from v0.0.4. For earlier versions, please refer to the release notes._
