@@ -15,7 +15,8 @@ func main() {
 
 	args := flag.Args()
 	if len(args) < 2 {
-		log.Fatal("Usage: generator [flags] <openapi-file> <base-output-dir>\n" +
+		log.Fatal("Usage: generator [flags] <schema-file> <base-output-dir>\n" +
+			"Supports OpenAPI 3.0 and Actor YAML formats. Format is automatically detected.\n" +
 			"Flags:\n" +
 			"  -generate-impl    Generate partial implementation stubs with not-implemented errors\n" +
 			"  -generate-example Generate example main.go, go.mod and other files for a complete app")
