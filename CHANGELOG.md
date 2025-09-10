@@ -22,4 +22,4 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-*Changes are documented here starting from v0.0.4. For earlier versions, please refer to the release notes.*
+_Changes are documented here starting from v0.0.4. For earlier versions, please refer to the release notes._
