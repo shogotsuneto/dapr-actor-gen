@@ -20,6 +20,9 @@ func NewOpenAPIParser(doc *openapi3.T) *OpenAPIParser {
 	return &OpenAPIParser{doc: doc}
 }
 
+// Ensure OpenAPIParser implements Parser interface
+var _ Parser = (*OpenAPIParser)(nil)
+
 // Parse converts the OpenAPI specification to an intermediate generator.GenerationModel
 func (p *OpenAPIParser) Parse() (*generator.GenerationModel, error) {
 	model := &generator.GenerationModel{}

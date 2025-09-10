@@ -4,7 +4,6 @@ import (
 	"flag"
 	"log"
 
-	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/shogotsuneto/dapr-actor-gen/pkg/generator"
 	"github.com/shogotsuneto/dapr-actor-gen/pkg/parser"
 )
@@ -25,18 +24,16 @@ func main() {
 	schemaFile := args[0]
 	baseOutputDir := args[1]
 
-	// Load OpenAPI spec
-	loader := openapi3.NewLoader()
-	doc, err := loader.LoadFromFile(schemaFile)
+	// Create parser based on file format
+	p, err := parser.NewParserFromFile(schemaFile)
 	if err != nil {
-		log.Fatalf("Failed to load OpenAPI spec: %v", err)
+		log.Fatalf("Failed to create parser: %v", err)
 	}
 
-	// Parse OpenAPI to intermediate model
-	p := parser.NewOpenAPIParser(doc)
+	// Parse schema to intermediate model
 	model, err := p.Parse()
 	if err != nil {
-		log.Fatalf("Failed to parse OpenAPI spec: %v", err)
+		log.Fatalf("Failed to parse schema: %v", err)
 	}
 
 	// Create generation options
