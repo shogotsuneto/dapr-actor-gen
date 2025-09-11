@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
-	"gopkg.in/yaml.v3"
 	"github.com/shogotsuneto/dapr-actor-gen/pkg/generator"
+	"gopkg.in/yaml.v3"
 )
 
 // ActorYAMLParser handles conversion from Actor YAML specification to intermediate model
@@ -20,7 +20,7 @@ func NewActorYAMLParser(yamlContent []byte) (*ActorYAMLParser, error) {
 	if err := yaml.Unmarshal(yamlContent, &schema); err != nil {
 		return nil, fmt.Errorf("failed to parse actor YAML: %v", err)
 	}
-	
+
 	return &ActorYAMLParser{schema: &schema}, nil
 }
 
@@ -227,9 +227,9 @@ func (p *ActorYAMLParser) convertToAlias(typeName string, typeDef TypeDefinition
 	if typeDef.Type == "array" && typeDef.Items != nil {
 		// Array type
 		itemType, _ := p.convertPropertyToGoType(PropertyDefinition{
-			Type: typeDef.Items.Type,
+			Type:   typeDef.Items.Type,
 			Format: typeDef.Items.Format,
-			Ref: "", // TODO: Handle refs in arrays if needed
+			Ref:    "", // TODO: Handle refs in arrays if needed
 		})
 		aliasType.AliasTarget = "[]" + itemType
 	} else {
@@ -344,21 +344,21 @@ func (p *ActorYAMLParser) categorizeTypesIntoActors(model *generator.GenerationM
 	// Assign types to actors based on usage
 	for i := range model.Actors {
 		actor := &model.Actors[i]
-		
+
 		// Assign structs
 		for _, structType := range allTypes.Structs {
 			if typeUsage[structType.Name][actor.ActorType] {
 				actor.Types.Structs = append(actor.Types.Structs, structType)
 			}
 		}
-		
+
 		// Assign aliases
 		for _, aliasType := range allTypes.Aliases {
 			if typeUsage[aliasType.Name][actor.ActorType] {
 				actor.Types.Aliases = append(actor.Types.Aliases, aliasType)
 			}
 		}
-		
+
 		// Assign enums
 		for _, enumType := range allTypes.Enums {
 			if typeUsage[enumType.Name][actor.ActorType] {
@@ -400,20 +400,20 @@ func (p *ActorYAMLParser) markTypeAsUsed(typeUsage map[string]map[string]bool, t
 func (p *ActorYAMLParser) extractTypeName(goType string) string {
 	// Remove pointer prefix
 	goType = strings.TrimPrefix(goType, "*")
-	
+
 	// Remove slice prefix
 	goType = strings.TrimPrefix(goType, "[]")
-	
+
 	// Remove built-in types
 	builtinTypes := map[string]bool{
 		"string": true, "int": true, "int32": true, "int64": true,
 		"float32": true, "float64": true, "bool": true, "interface{}": true,
 		"error": true,
 	}
-	
+
 	if builtinTypes[goType] {
 		return ""
 	}
-	
+
 	return goType
 }

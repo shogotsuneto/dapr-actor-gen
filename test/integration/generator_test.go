@@ -667,7 +667,7 @@ func TestOptionalObjectReferences(t *testing.T) {
 
 func TestActorYAMLParsing(t *testing.T) {
 	// Test the new Actor YAML format parser
-	p, err := parser.NewParserFromFile("testdata/basic-actor-yaml.yaml")
+	p, err := parser.NewParser("actor-yaml", "testdata/basic-actor-yaml.yaml")
 	if err != nil {
 		t.Fatalf("Failed to create parser for Actor YAML: %v", err)
 	}
@@ -760,7 +760,7 @@ func TestActorYAMLVsOpenAPIEquivalence(t *testing.T) {
 	// though they may not be identical due to different naming conventions
 
 	// Generate from OpenAPI format
-	openapiParser, err := parser.NewParserFromFile("testdata/basic-actor.yaml")
+	openapiParser, err := parser.NewParser("openapi", "testdata/basic-actor.yaml")
 	if err != nil {
 		t.Fatalf("Failed to create OpenAPI parser: %v", err)
 	}
@@ -771,7 +771,7 @@ func TestActorYAMLVsOpenAPIEquivalence(t *testing.T) {
 	}
 
 	// Generate from Actor YAML format
-	actorParser, err := parser.NewParserFromFile("testdata/basic-actor-yaml.yaml")
+	actorParser, err := parser.NewParser("actor-yaml", "testdata/basic-actor-yaml.yaml")
 	if err != nil {
 		t.Fatalf("Failed to create Actor YAML parser: %v", err)
 	}

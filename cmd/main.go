@@ -11,13 +11,14 @@ import (
 func main() {
 	var generateImpl = flag.Bool("generate-impl", false, "Generate partial implementation stubs with not-implemented errors")
 	var generateExample = flag.Bool("generate-example", false, "Generate example main.go, go.mod and other files for a complete app")
+	var format = flag.String("format", "openapi", "Input format: 'openapi' for OpenAPI 3.0 or 'actor-yaml' for Actor YAML")
 	flag.Parse()
 
 	args := flag.Args()
 	if len(args) < 2 {
 		log.Fatal("Usage: generator [flags] <schema-file> <base-output-dir>\n" +
-			"Supports OpenAPI 3.0 and Actor YAML formats. Format is automatically detected.\n" +
 			"Flags:\n" +
+			"  -format string    Input format: 'openapi' for OpenAPI 3.0 or 'actor-yaml' for Actor YAML (default \"openapi\")\n" +
 			"  -generate-impl    Generate partial implementation stubs with not-implemented errors\n" +
 			"  -generate-example Generate example main.go, go.mod and other files for a complete app")
 	}
@@ -25,8 +26,8 @@ func main() {
 	schemaFile := args[0]
 	baseOutputDir := args[1]
 
-	// Create parser based on file format
-	p, err := parser.NewParserFromFile(schemaFile)
+	// Create parser based on specified format
+	p, err := parser.NewParser(*format, schemaFile)
 	if err != nil {
 		log.Fatalf("Failed to create parser: %v", err)
 	}
