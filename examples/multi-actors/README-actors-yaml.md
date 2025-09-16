@@ -1,8 +1,8 @@
-# Actor YAML Format Example
+# Actor Schema Example
 
-This directory demonstrates the new Actor YAML format that provides a more intuitive way to define Dapr actors compared to OpenAPI specifications.
+This directory demonstrates the new Actor Schema format that provides a more intuitive way to define Dapr actors compared to OpenAPI specifications.
 
-## What's Different About Actor YAML?
+## What's Different About Actor Schema?
 
 ### Before (OpenAPI Format)
 ```yaml
@@ -25,7 +25,7 @@ paths:
                 $ref: '#/components/schemas/CounterState'
 ```
 
-### After (Actor YAML Format)
+### After (Actor Schema Format)
 ```yaml
 actors:
   Counter:
@@ -42,18 +42,18 @@ actors:
 2. **More Concise**: Less boilerplate than OpenAPI specifications
 3. **Intuitive**: Natural way to think about actor methods and types
 4. **Same Output**: Generates identical Go code as OpenAPI format
-5. **Backward Compatible**: OpenAPI format still works alongside Actor YAML
+5. **Backward Compatible**: OpenAPI format still works alongside Actor Schema
 
 ## File Structure
 
-- `actors.yaml` - Example Actor YAML definition (equivalent to `openapi.yaml`)
+- `actors.yaml` - Example Actor Schema definition (equivalent to `openapi.yaml`)
 - `openapi.yaml` - Original OpenAPI definition for comparison
 
 ## Usage Examples
 
-### Generate from Actor YAML
+### Generate from Actor Schema
 ```bash
-# Generate interfaces + implementations from Actor YAML
+# Generate interfaces + implementations from Actor Schema
 ./bin/dapr-actor-gen --generate-impl examples/multi-actors/actors.yaml ./output
 
 # Generate complete example application
@@ -66,7 +66,7 @@ actors:
 ./bin/dapr-actor-gen --generate-impl examples/multi-actors/openapi.yaml ./output
 ```
 
-## Actor YAML Schema
+## Actor Schema
 
 ### Basic Structure
 ```yaml
@@ -117,7 +117,7 @@ Reset:
 
 ### Type Definitions
 
-Actor YAML uses the same type definition syntax as OpenAPI schemas:
+Actor Schema uses the same type definition syntax as OpenAPI schemas:
 
 ```yaml
 types:
@@ -154,14 +154,14 @@ types:
 
 The tool automatically detects the format:
 
-- **Actor YAML**: Files containing `actors:` top-level key
+- **Actor Schema**: Files containing `actors:` top-level key
 - **OpenAPI**: Files containing `openapi:` or `swagger:` or REST-style `paths:`
 
 You can mix both formats in the same project - the tool will handle each file appropriately.
 
 ## Migration from OpenAPI
 
-To migrate existing OpenAPI specifications to Actor YAML:
+To migrate existing OpenAPI specifications to Actor Schema:
 
 1. **Extract Actor Types**: Look for path patterns like `/{actorType}/{actorId}/method/{methodName}`
 2. **Group by Actor**: Collect all methods for each actor type
@@ -183,7 +183,7 @@ diff -r ./output-openapi ./output-actors
 
 ## When to Use Each Format
 
-### Use Actor YAML When:
+### Use Actor Schema When:
 - Defining new actors from scratch
 - Working primarily with actor patterns
 - Want cleaner, more readable definitions
