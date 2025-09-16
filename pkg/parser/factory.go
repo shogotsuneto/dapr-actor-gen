@@ -12,10 +12,10 @@ func NewParser(format, filePath string) (Parser, error) {
 	switch format {
 	case "openapi":
 		return newOpenAPIParser(filePath)
-	case "actor-yaml":
-		return newActorYAMLParser(filePath)
+	case "actor-schema":
+		return newActorSchemaParser(filePath)
 	default:
-		return nil, fmt.Errorf("unsupported format: %s. Supported formats are 'openapi' and 'actor-yaml'", format)
+		return nil, fmt.Errorf("unsupported format: %s. Supported formats are 'openapi' and 'actor-schema'", format)
 	}
 }
 
@@ -29,11 +29,11 @@ func newOpenAPIParser(filePath string) (Parser, error) {
 	return NewOpenAPIParser(doc), nil
 }
 
-// newActorYAMLParser creates an Actor YAML parser from file
-func newActorYAMLParser(filePath string) (Parser, error) {
+// newActorSchemaParser creates an Actor Schema parser from file
+func newActorSchemaParser(filePath string) (Parser, error) {
 	content, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file %s: %v", filePath, err)
 	}
-	return NewActorYAMLParser(content)
+	return NewActorSchemaParser(content)
 }

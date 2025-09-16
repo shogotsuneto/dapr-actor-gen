@@ -1,4 +1,4 @@
-# Simple actor definition for testing basic Actor YAML parsing functionality
+# Simple actor definition for testing basic Actor Schema parsing functionality
 actors:
   TestActor:
     description: Simple test actor for validation

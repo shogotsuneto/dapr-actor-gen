@@ -665,11 +665,11 @@ func TestOptionalObjectReferences(t *testing.T) {
 	t.Logf("Successfully validated optional object references and non-struct references are converted to pointers")
 }
 
-func TestActorYAMLParsing(t *testing.T) {
-	// Test the new Actor YAML format parser
-	p, err := parser.NewParser("actor-yaml", "testdata/basic-actor-yaml.yaml")
+func TestActorSchemaParsing(t *testing.T) {
+	// Test the new Actor Schema format parser
+	p, err := parser.NewParser("actor-schema", "testdata/basic-actor-schema.yaml")
 	if err != nil {
-		t.Fatalf("Failed to create parser for Actor YAML: %v", err)
+		t.Fatalf("Failed to create parser for Actor Schema: %v", err)
 	}
 
 	// Parse the spec to intermediate model
@@ -752,10 +752,10 @@ func TestActorYAMLParsing(t *testing.T) {
 		t.Error("Expected struct type 'SetValueRequest' not found")
 	}
 
-	t.Logf("Successfully validated Actor YAML parsing functionality")
+	t.Logf("Successfully validated Actor Schema parsing functionality")
 }
 
-func TestActorYAMLVsOpenAPIEquivalence(t *testing.T) {
+func TestActorSchemaVsOpenAPIEquivalence(t *testing.T) {
 	// This test demonstrates that both formats can produce similar structures
 	// though they may not be identical due to different naming conventions
 
@@ -770,15 +770,15 @@ func TestActorYAMLVsOpenAPIEquivalence(t *testing.T) {
 		t.Fatalf("Failed to parse OpenAPI spec: %v", err)
 	}
 
-	// Generate from Actor YAML format
-	actorParser, err := parser.NewParser("actor-yaml", "testdata/basic-actor-yaml.yaml")
+	// Generate from Actor Schema format
+	actorParser, err := parser.NewParser("actor-schema", "testdata/basic-actor-schema.yaml")
 	if err != nil {
-		t.Fatalf("Failed to create Actor YAML parser: %v", err)
+		t.Fatalf("Failed to create Actor Schema parser: %v", err)
 	}
 
 	actorModel, err := actorParser.Parse()
 	if err != nil {
-		t.Fatalf("Failed to parse Actor YAML spec: %v", err)
+		t.Fatalf("Failed to parse Actor Schema spec: %v", err)
 	}
 
 	// Both should produce actors (even if different in details)
@@ -787,21 +787,21 @@ func TestActorYAMLVsOpenAPIEquivalence(t *testing.T) {
 	}
 
 	if len(actorModel.Actors) == 0 {
-		t.Error("Actor YAML model should have produced at least one actor")
+		t.Error("Actor Schema model should have produced at least one actor")
 	}
 
 	// Both should parse the same basic structure types
 	if len(openapiModel.Actors) > 0 && len(actorModel.Actors) > 0 {
 		openapiActor := openapiModel.Actors[0]
-		actorYAMLActor := actorModel.Actors[0]
+		actorSchemaActor := actorModel.Actors[0]
 
 		// Both should have methods
 		if len(openapiActor.Methods) == 0 {
 			t.Error("OpenAPI actor should have methods")
 		}
 
-		if len(actorYAMLActor.Methods) == 0 {
-			t.Error("Actor YAML actor should have methods")
+		if len(actorSchemaActor.Methods) == 0 {
+			t.Error("Actor Schema actor should have methods")
 		}
 
 		// Both should have types
@@ -809,10 +809,10 @@ func TestActorYAMLVsOpenAPIEquivalence(t *testing.T) {
 			t.Error("OpenAPI actor should have struct types")
 		}
 
-		if len(actorYAMLActor.Types.Structs) == 0 {
-			t.Error("Actor YAML actor should have struct types")
+		if len(actorSchemaActor.Types.Structs) == 0 {
+			t.Error("Actor Schema actor should have struct types")
 		}
 	}
 
-	t.Logf("Successfully validated both Actor YAML and OpenAPI can parse and generate actor code")
+	t.Logf("Successfully validated both Actor Schema and OpenAPI can parse and generate actor code")
 }

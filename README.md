@@ -26,7 +26,7 @@ docker run --rm \
   ghcr.io/shogotsuneto/dapr-actor-gen:latest \
   /examples/multi-actors/openapi.yaml /output
 
-# Or generate from Actor YAML format (more intuitive)
+# Or generate from Actor Schema format (more intuitive)
 docker run --rm \
   -v $(pwd)/examples:/examples \
   -v $(pwd)/output:/output \
@@ -47,7 +47,7 @@ make build
 # Use the binary directly to generate from OpenAPI schema
 ./bin/dapr-actor-gen examples/multi-actors/openapi.yaml ./generated
 
-# Or use the more intuitive Actor YAML format
+# Or use the more intuitive Actor Schema format
 ./bin/dapr-actor-gen examples/multi-actors/actors.yaml ./generated
 ```
 
@@ -289,12 +289,12 @@ When using `--generate-example`:
 ## Features
 
 - ✅ **OpenAPI 3.0 Support** - Full support for OpenAPI specifications
-- ✅ **Actor YAML Format** - Native actor-centric YAML format (more intuitive than OpenAPI paths)
+- ✅ **Actor Schema Format** - Native actor-centric YAML format (more intuitive than OpenAPI paths)
 - ✅ **Multiple Actor Types** - Generate multiple actors from one spec
 - ✅ **Type Safety** - Generated types match your schemas exactly
 - ✅ **Dapr Integration** - Ready-to-use with Dapr Go SDK
 - ✅ **Factory Functions** - Automatic registration helpers
-- ✅ **Format Auto-Detection** - Automatically detects OpenAPI vs Actor YAML format
+- ✅ **Format Auto-Detection** - Automatically detects OpenAPI vs Actor Schema format
 - 🔄 **Future**: Protocol Buffers, JSON Schema, GraphQL support
 
 ## Building from Source

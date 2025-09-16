@@ -1,7 +1,7 @@
 package parser
 
-// ActorYAMLSchema represents the root structure of an actor definition YAML file
-type ActorYAMLSchema struct {
+// ActorSchemaSchema represents the root structure of an actor definition YAML file
+type ActorSchemaSchema struct {
 	Actors map[string]ActorDefinition `yaml:"actors"`
 	Types  map[string]TypeDefinition  `yaml:"types"`
 }

@@ -9,23 +9,23 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// ActorYAMLParser handles conversion from Actor YAML specification to intermediate model
-type ActorYAMLParser struct {
-	schema *ActorYAMLSchema
+// ActorSchemaParser handles conversion from Actor Schema specification to intermediate model
+type ActorSchemaParser struct {
+	schema *ActorSchemaSchema
 }
 
-// NewActorYAMLParser creates a new Actor YAML parser from YAML content
-func NewActorYAMLParser(yamlContent []byte) (*ActorYAMLParser, error) {
-	var schema ActorYAMLSchema
+// NewActorSchemaParser creates a new Actor Schema parser from YAML content
+func NewActorSchemaParser(yamlContent []byte) (*ActorSchemaParser, error) {
+	var schema ActorSchemaSchema
 	if err := yaml.Unmarshal(yamlContent, &schema); err != nil {
 		return nil, fmt.Errorf("failed to parse actor YAML: %v", err)
 	}
 
-	return &ActorYAMLParser{schema: &schema}, nil
+	return &ActorSchemaParser{schema: &schema}, nil
 }
 
-// Parse converts the Actor YAML specification to an intermediate generator.GenerationModel
-func (p *ActorYAMLParser) Parse() (*generator.GenerationModel, error) {
+// Parse converts the Actor Schema specification to an intermediate generator.GenerationModel
+func (p *ActorSchemaParser) Parse() (*generator.GenerationModel, error) {
 	model := &generator.GenerationModel{}
 
 	// Parse actors and their methods
@@ -42,7 +42,7 @@ func (p *ActorYAMLParser) Parse() (*generator.GenerationModel, error) {
 }
 
 // parseActors converts actors from YAML to the intermediate model
-func (p *ActorYAMLParser) parseActors(model *generator.GenerationModel) error {
+func (p *ActorSchemaParser) parseActors(model *generator.GenerationModel) error {
 	var actors []generator.ActorInterface
 
 	// Convert each actor definition
@@ -94,7 +94,7 @@ func (p *ActorYAMLParser) parseActors(model *generator.GenerationModel) error {
 }
 
 // parseAndCategorizeTypes converts types from YAML and assigns them to actors
-func (p *ActorYAMLParser) parseAndCategorizeTypes(model *generator.GenerationModel) error {
+func (p *ActorSchemaParser) parseAndCategorizeTypes(model *generator.GenerationModel) error {
 	// Parse all types from the YAML schema
 	allTypes, err := p.parseTypes()
 	if err != nil {
@@ -109,7 +109,7 @@ func (p *ActorYAMLParser) parseAndCategorizeTypes(model *generator.GenerationMod
 }
 
 // parseTypes converts type definitions from YAML to intermediate model
-func (p *ActorYAMLParser) parseTypes() (generator.TypeDefinitions, error) {
+func (p *ActorSchemaParser) parseTypes() (generator.TypeDefinitions, error) {
 	var types generator.TypeDefinitions
 
 	for typeName, typeDef := range p.schema.Types {
@@ -153,7 +153,7 @@ func (p *ActorYAMLParser) parseTypes() (generator.TypeDefinitions, error) {
 }
 
 // convertToStruct converts a YAML type definition to a struct type
-func (p *ActorYAMLParser) convertToStruct(typeName string, typeDef TypeDefinition) (generator.StructType, error) {
+func (p *ActorSchemaParser) convertToStruct(typeName string, typeDef TypeDefinition) (generator.StructType, error) {
 	structType := generator.StructType{
 		Name:        typeName,
 		Description: typeDef.Description,
@@ -202,7 +202,7 @@ func (p *ActorYAMLParser) convertToStruct(typeName string, typeDef TypeDefinitio
 }
 
 // convertToEnum converts a YAML type definition to an enum type
-func (p *ActorYAMLParser) convertToEnum(typeName string, typeDef TypeDefinition) generator.EnumType {
+func (p *ActorSchemaParser) convertToEnum(typeName string, typeDef TypeDefinition) generator.EnumType {
 	enumType := generator.EnumType{
 		Name:        typeName,
 		Description: typeDef.Description,
@@ -218,7 +218,7 @@ func (p *ActorYAMLParser) convertToEnum(typeName string, typeDef TypeDefinition)
 }
 
 // convertToAlias converts a YAML type definition to a type alias
-func (p *ActorYAMLParser) convertToAlias(typeName string, typeDef TypeDefinition) generator.TypeAlias {
+func (p *ActorSchemaParser) convertToAlias(typeName string, typeDef TypeDefinition) generator.TypeAlias {
 	aliasType := generator.TypeAlias{
 		Name:        typeName,
 		Description: typeDef.Description,
@@ -241,7 +241,7 @@ func (p *ActorYAMLParser) convertToAlias(typeName string, typeDef TypeDefinition
 }
 
 // convertPropertyToGoType converts a property definition to Go type string
-func (p *ActorYAMLParser) convertPropertyToGoType(propDef PropertyDefinition) (string, error) {
+func (p *ActorSchemaParser) convertPropertyToGoType(propDef PropertyDefinition) (string, error) {
 	if propDef.Ref != "" {
 		// Reference to another type - extract type name from $ref
 		if strings.HasPrefix(propDef.Ref, "#/types/") {
@@ -267,7 +267,7 @@ func (p *ActorYAMLParser) convertPropertyToGoType(propDef PropertyDefinition) (s
 }
 
 // getGoTypeForYAMLType maps YAML types to Go types
-func (p *ActorYAMLParser) getGoTypeForYAMLType(yamlType, format string) string {
+func (p *ActorSchemaParser) getGoTypeForYAMLType(yamlType, format string) string {
 	switch yamlType {
 	case "string":
 		return "string"
@@ -297,7 +297,7 @@ func (p *ActorYAMLParser) getGoTypeForYAMLType(yamlType, format string) string {
 }
 
 // sortTypes sorts all type collections for consistent ordering
-func (p *ActorYAMLParser) sortTypes(types *generator.TypeDefinitions) {
+func (p *ActorSchemaParser) sortTypes(types *generator.TypeDefinitions) {
 	sort.Slice(types.Structs, func(i, j int) bool {
 		return types.Structs[i].Name < types.Structs[j].Name
 	})
@@ -310,7 +310,7 @@ func (p *ActorYAMLParser) sortTypes(types *generator.TypeDefinitions) {
 }
 
 // categorizeTypesIntoActors analyzes types and assigns them to actors that use them
-func (p *ActorYAMLParser) categorizeTypesIntoActors(model *generator.GenerationModel, allTypes generator.TypeDefinitions) error {
+func (p *ActorSchemaParser) categorizeTypesIntoActors(model *generator.GenerationModel, allTypes generator.TypeDefinitions) error {
 	// Create a map to track which types are used by which actors
 	typeUsage := make(map[string]map[string]bool) // type -> actor -> used
 
@@ -371,7 +371,7 @@ func (p *ActorYAMLParser) categorizeTypesIntoActors(model *generator.GenerationM
 }
 
 // markTypeAsUsed marks a type as used by an actor and recursively marks dependencies
-func (p *ActorYAMLParser) markTypeAsUsed(typeUsage map[string]map[string]bool, typeName, actorType string, allTypes generator.TypeDefinitions) {
+func (p *ActorSchemaParser) markTypeAsUsed(typeUsage map[string]map[string]bool, typeName, actorType string, allTypes generator.TypeDefinitions) {
 	if typeUsage[typeName] == nil {
 		return // Type doesn't exist
 	}
@@ -397,7 +397,7 @@ func (p *ActorYAMLParser) markTypeAsUsed(typeUsage map[string]map[string]bool, t
 }
 
 // extractTypeName extracts the core type name from a Go type string
-func (p *ActorYAMLParser) extractTypeName(goType string) string {
+func (p *ActorSchemaParser) extractTypeName(goType string) string {
 	// Remove pointer prefix
 	goType = strings.TrimPrefix(goType, "*")
 

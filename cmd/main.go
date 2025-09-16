@@ -11,14 +11,14 @@ import (
 func main() {
 	var generateImpl = flag.Bool("generate-impl", false, "Generate partial implementation stubs with not-implemented errors")
 	var generateExample = flag.Bool("generate-example", false, "Generate example main.go, go.mod and other files for a complete app")
-	var format = flag.String("format", "openapi", "Input format: 'openapi' for OpenAPI 3.0 or 'actor-yaml' for Actor YAML")
+	var format = flag.String("format", "openapi", "Input format: 'openapi' for OpenAPI 3.0 or 'actor-schema' for Actor Schema")
 	flag.Parse()
 
 	args := flag.Args()
 	if len(args) < 2 {
 		log.Fatal("Usage: generator [flags] <schema-file> <base-output-dir>\n" +
 			"Flags:\n" +
-			"  -format string    Input format: 'openapi' for OpenAPI 3.0 or 'actor-yaml' for Actor YAML (default \"openapi\")\n" +
+			"  -format string    Input format: 'openapi' for OpenAPI 3.0 or 'actor-schema' for Actor Schema (default \"openapi\")\n" +
 			"  -generate-impl    Generate partial implementation stubs with not-implemented errors\n" +
 			"  -generate-example Generate example main.go, go.mod and other files for a complete app")
 	}
