@@ -63,7 +63,7 @@ actors:
 ### Still Works with OpenAPI
 ```bash
 # Original OpenAPI format still supported
-./bin/dapr-actor-gen --generate-impl examples/multi-actors/openapi.yaml ./output
+./bin/dapr-actor-gen -format openapi --generate-impl examples/multi-actors/openapi.yaml ./output
 ```
 
 ## Actor Schema
@@ -174,7 +174,7 @@ Both formats generate identical Go code:
 
 ```bash
 # Both commands produce the same output structure
-./bin/dapr-actor-gen --generate-impl examples/multi-actors/openapi.yaml ./output-openapi
+./bin/dapr-actor-gen -format openapi --generate-impl examples/multi-actors/openapi.yaml ./output-openapi
 ./bin/dapr-actor-gen --generate-impl examples/multi-actors/actors.yaml ./output-actors
 
 # Verify they're equivalent

@@ -45,7 +45,7 @@ cd dapr-actor-gen
 make build
 
 # Use the binary directly to generate from OpenAPI schema
-./bin/dapr-actor-gen examples/multi-actors/openapi.yaml ./generated
+./bin/dapr-actor-gen -format openapi examples/multi-actors/openapi.yaml ./generated
 
 # Or use the more intuitive Actor Schema format
 ./bin/dapr-actor-gen examples/multi-actors/actors.yaml ./generated
@@ -181,7 +181,7 @@ After building with `make build`, the binary will be available at `./bin/dapr-ac
 ./bin/dapr-actor-gen path/to/schema.yaml ./generated
 
 # Example with the provided sample schema
-./bin/dapr-actor-gen examples/multi-actors/openapi.yaml ./generated
+./bin/dapr-actor-gen -format openapi examples/multi-actors/openapi.yaml ./generated
 ```
 
 ## OpenAPI Schema Requirements
@@ -255,17 +255,17 @@ dapr-actor-gen [flags] <openapi-file> <output-directory>
 ### Usage Examples
 
 ```bash
-# Generate interfaces only (default behavior)
-dapr-actor-gen openapi.yaml ./output
+# Generate interfaces only
+dapr-actor-gen -format openapi openapi.yaml ./output
 
 # Generate interfaces + partial implementations
-dapr-actor-gen --generate-impl openapi.yaml ./output
+dapr-actor-gen -format openapi --generate-impl openapi.yaml ./output
 
 # Generate interfaces + example application
-dapr-actor-gen --generate-example openapi.yaml ./output
+dapr-actor-gen -format openapi --generate-example openapi.yaml ./output
 
 # Generate everything together
-dapr-actor-gen --generate-impl --generate-example openapi.yaml ./output
+dapr-actor-gen -format openapi --generate-impl --generate-example openapi.yaml ./output
 ```
 
 #### Partial Implementation Generation (`--generate-impl`)
@@ -346,7 +346,7 @@ docker build -t dapr-actor-gen .
 
 # Run locally built image
 docker run --rm -v $(pwd)/examples:/examples -v $(pwd)/output:/output \
-  dapr-actor-gen /examples/multi-actors/openapi.yaml /output
+  dapr-actor-gen -format openapi /examples/multi-actors/openapi.yaml /output
 ```
 
 ## Releases

@@ -36,16 +36,16 @@ make build
 
 ```bash
 # Basic generation (interfaces only - will not compile)
-./bin/dapr-actor-gen examples/multi-actors/openapi.yaml examples/multi-actors/generated
+./bin/dapr-actor-gen -format openapi examples/multi-actors/openapi.yaml examples/multi-actors/generated
 
 # Generate with implementation stubs (compilable but not-implemented errors)
-./bin/dapr-actor-gen --generate-impl examples/multi-actors/openapi.yaml examples/multi-actors/generated
+./bin/dapr-actor-gen -format openapi --generate-impl examples/multi-actors/openapi.yaml examples/multi-actors/generated
 
 # Generate with example application
-./bin/dapr-actor-gen --generate-example examples/multi-actors/openapi.yaml examples/multi-actors/generated
+./bin/dapr-actor-gen -format openapi --generate-example examples/multi-actors/openapi.yaml examples/multi-actors/generated
 
 # Generate everything (what's in the generated/ directory)
-./bin/dapr-actor-gen --generate-impl --generate-example examples/multi-actors/openapi.yaml examples/multi-actors/generated
+./bin/dapr-actor-gen -format openapi --generate-impl --generate-example examples/multi-actors/openapi.yaml examples/multi-actors/generated
 ```
 
 
