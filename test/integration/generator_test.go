@@ -664,3 +664,155 @@ func TestOptionalObjectReferences(t *testing.T) {
 
 	t.Logf("Successfully validated optional object references and non-struct references are converted to pointers")
 }
+
+func TestActorSchemaParsing(t *testing.T) {
+	// Test the new Actor Schema format parser
+	p, err := parser.NewParser("actor-schema", "testdata/basic-actor-schema.yaml")
+	if err != nil {
+		t.Fatalf("Failed to create parser for Actor Schema: %v", err)
+	}
+
+	// Parse the spec to intermediate model
+	model, err := p.Parse()
+	if err != nil {
+		t.Fatalf("Failed to parse Actor YAML spec: %v", err)
+	}
+
+	// Verify that we have exactly one actor
+	if len(model.Actors) != 1 {
+		t.Errorf("Expected 1 actor, got %d", len(model.Actors))
+	}
+
+	// Verify the TestActor actor
+	actor := model.Actors[0]
+	if actor.ActorType != "TestActor" {
+		t.Errorf("Expected actor type 'TestActor', got '%s'", actor.ActorType)
+	}
+
+	if actor.InterfaceDesc != "Simple test actor for validation" {
+		t.Errorf("Expected actor description 'Simple test actor for validation', got '%s'", actor.InterfaceDesc)
+	}
+
+	if len(actor.Methods) != 2 {
+		t.Errorf("Expected TestActor to have 2 methods, got %d", len(actor.Methods))
+	}
+
+	// Verify methods
+	methodNames := make(map[string]bool)
+	methodsMap := make(map[string]generator.Method)
+	for _, method := range actor.Methods {
+		methodNames[method.Name] = true
+		methodsMap[method.Name] = method
+	}
+
+	if !methodNames["GetValue"] {
+		t.Error("Expected 'GetValue' method not found")
+	}
+
+	if !methodNames["SetValue"] {
+		t.Error("Expected 'SetValue' method not found")
+	}
+
+	// Verify GetValue method
+	getValue := methodsMap["GetValue"]
+	if getValue.HasRequest {
+		t.Error("GetValue should not have request body")
+	}
+	if getValue.ReturnType != "TestState" {
+		t.Errorf("Expected GetValue return type 'TestState', got '%s'", getValue.ReturnType)
+	}
+
+	// Verify SetValue method
+	setValue := methodsMap["SetValue"]
+	if !setValue.HasRequest {
+		t.Error("SetValue should have request body")
+	}
+	if setValue.RequestType != "SetValueRequest" {
+		t.Errorf("Expected SetValue request type 'SetValueRequest', got '%s'", setValue.RequestType)
+	}
+	if setValue.ReturnType != "TestState" {
+		t.Errorf("Expected SetValue return type 'TestState', got '%s'", setValue.ReturnType)
+	}
+
+	// Verify that types are assigned to the actor
+	if len(actor.Types.Structs) != 2 {
+		t.Errorf("Expected actor to have 2 struct types, got %d", len(actor.Types.Structs))
+	}
+
+	structNames := make(map[string]bool)
+	for _, structType := range actor.Types.Structs {
+		structNames[structType.Name] = true
+	}
+
+	if !structNames["TestState"] {
+		t.Error("Expected struct type 'TestState' not found")
+	}
+
+	if !structNames["SetValueRequest"] {
+		t.Error("Expected struct type 'SetValueRequest' not found")
+	}
+
+	t.Logf("Successfully validated Actor Schema parsing functionality")
+}
+
+func TestActorSchemaVsOpenAPIEquivalence(t *testing.T) {
+	// This test demonstrates that both formats can produce similar structures
+	// though they may not be identical due to different naming conventions
+
+	// Generate from OpenAPI format
+	openapiParser, err := parser.NewParser("openapi", "testdata/basic-actor.yaml")
+	if err != nil {
+		t.Fatalf("Failed to create OpenAPI parser: %v", err)
+	}
+
+	openapiModel, err := openapiParser.Parse()
+	if err != nil {
+		t.Fatalf("Failed to parse OpenAPI spec: %v", err)
+	}
+
+	// Generate from Actor Schema format
+	actorParser, err := parser.NewParser("actor-schema", "testdata/basic-actor-schema.yaml")
+	if err != nil {
+		t.Fatalf("Failed to create Actor Schema parser: %v", err)
+	}
+
+	actorModel, err := actorParser.Parse()
+	if err != nil {
+		t.Fatalf("Failed to parse Actor Schema spec: %v", err)
+	}
+
+	// Both should produce actors (even if different in details)
+	if len(openapiModel.Actors) == 0 {
+		t.Error("OpenAPI model should have produced at least one actor")
+	}
+
+	if len(actorModel.Actors) == 0 {
+		t.Error("Actor Schema model should have produced at least one actor")
+	}
+
+	// Both should parse the same basic structure types
+	if len(openapiModel.Actors) > 0 && len(actorModel.Actors) > 0 {
+		openapiActor := openapiModel.Actors[0]
+		actorSchemaActor := actorModel.Actors[0]
+
+		// Both should have methods
+		if len(openapiActor.Methods) == 0 {
+			t.Error("OpenAPI actor should have methods")
+		}
+
+		if len(actorSchemaActor.Methods) == 0 {
+			t.Error("Actor Schema actor should have methods")
+		}
+
+		// Both should have types
+		if len(openapiActor.Types.Structs) == 0 {
+			t.Error("OpenAPI actor should have struct types")
+		}
+
+		if len(actorSchemaActor.Types.Structs) == 0 {
+			t.Error("Actor Schema actor should have struct types")
+		}
+	}
+
+	t.Logf("Successfully validated both Actor Schema and OpenAPI can parse and generate actor code")
+}

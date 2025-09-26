@@ -1,0 +1,207 @@
+# Example Actor Definition
+# This demonstrates the actor-native YAML format that's more intuitive 
+# than OpenAPI paths like /{actorType}/{actorId}/method/{methodName}
+
+actors:
+  Counter:
+    description: Simple state-based counter actor with increment/decrement operations
+    methods:
+      Get:
+        description: Get current counter value
+        returns: CounterState
+      Increment:
+        description: Increment counter by 1
+        returns: CounterState
+      Decrement:
+        description: Decrement counter by 1
+        returns: CounterState
+      Set:
+        description: Set counter to specific value
+        request: SetValueRequest
+        returns: CounterState
+
+  BankAccount:
+    description: Event-sourced bank account actor with transaction history
+    methods:
+      CreateAccount:
+        description: Create new bank account
+        request: CreateAccountRequest
+        returns: BankAccountState
+      Deposit:
+        description: Deposit money to account
+        request: DepositRequest
+        returns: BankAccountState
+      Withdraw:
+        description: Withdraw money from account
+        request: WithdrawRequest
+        returns: BankAccountState
+      GetBalance:
+        description: Get current account balance
+        returns: BankAccountState
+      GetHistory:
+        description: Get complete transaction history
+        returns: TransactionHistory
+
+types:
+  # Counter Actor Types
+  CounterState:
+    type: object
+    description: Current state of the counter actor (state-based)
+    properties:
+      value:
+        type: integer
+        format: int32
+        description: The current counter value
+        example: 42
+      status:
+        type: string
+        enum: [active, paused, error, reset]
+        description: Current status of the counter
+        example: active
+      lastOperation:
+        type: string
+        enum: [increment, decrement, set, get, reset]
+        description: Type of the last operation performed
+        example: increment
+    required: [value, status]
+
+  SetValueRequest:
+    type: object
+    description: Request to set the counter to a specific value
+    properties:
+      value:
+        type: integer
+        format: int32
+        description: The value to set the counter to
+        minimum: -2147483648
+        maximum: 2147483647
+        example: 100
+    required: [value]
+
+  # BankAccount Actor Types
+  BankAccountState:
+    type: object
+    description: Current state of bank account (computed from events)
+    properties:
+      accountId:
+        type: string
+        description: Unique account identifier
+        example: "account-123"
+      ownerName:
+        type: string
+        description: Account owner name
+        example: "John Doe"
+      balance:
+        type: number
+        format: double
+        description: Current account balance (computed from events)
+        example: 1250.50
+      isActive:
+        type: boolean
+        description: Whether account is active
+        example: true
+      createdAt:
+        type: string
+        format: date-time
+        description: Account creation timestamp
+        example: "2024-01-15T10:30:00Z"
+    required: [accountId, ownerName, balance, isActive]
+
+  CreateAccountRequest:
+    type: object
+    description: Request to create a new bank account
+    properties:
+      ownerName:
+        type: string
+        description: Name of the account owner
+        minLength: 1
+        maxLength: 100
+        example: "John Doe"
+      initialDeposit:
+        type: number
+        format: double
+        description: Initial deposit amount
+        minimum: 0
+        example: 100.00
+    required: [ownerName, initialDeposit]
+
+  DepositRequest:
+    type: object
+    description: Request to deposit money
+    properties:
+      amount:
+        type: number
+        format: double
+        description: Amount to deposit
+        minimum: 0.01
+        example: 250.00
+      description:
+        type: string
+        description: Description of the deposit
+        maxLength: 200
+        example: "Salary deposit"
+    required: [amount, description]
+
+  WithdrawRequest:
+    type: object
+    description: Request to withdraw money
+    properties:
+      amount:
+        type: number
+        format: double
+        description: Amount to withdraw
+        minimum: 0.01
+        example: 50.00
+      description:
+        type: string
+        description: Description of the withdrawal
+        maxLength: 200
+        example: "ATM withdrawal"
+    required: [amount, description]
+
+  TransactionHistory:
+    type: object
+    description: Complete transaction history (event sourcing benefit)
+    properties:
+      accountId:
+        type: string
+        description: Account identifier
+        example: "account-123"
+      events:
+        type: array
+        description: List of all events in chronological order
+        items:
+          $ref: "#/types/AccountEvent"
+    required: [accountId, events]
+
+  AccountEvent:
+    type: object
+    description: A single account event
+    properties:
+      eventId:
+        type: string
+        description: Unique event identifier
+        example: "evt-001"
+      eventSequence:
+        type: integer
+        format: int64
+        description: Sequence number for ordering events
+        example: 1234567890123456789
+      eventType:
+        type: string
+        enum: [AccountCreated, MoneyDeposited, MoneyWithdrawn]
+        description: Type of event
+        example: "MoneyDeposited"
+      timestamp:
+        type: string
+        format: date-time
+        description: When the event occurred
+        example: "2024-01-15T10:30:00Z"
+      data:
+        type: object
+        description: Event-specific data
+        additionalProperties: true
+        example:
+          amount: 250.00
+          description: "Salary deposit"
+    required: [eventId, eventSequence, eventType, timestamp, data]

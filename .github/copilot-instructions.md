@@ -26,10 +26,10 @@ Always reference these instructions first and fallback to search or bash command
 ## Core Functionality Testing
 
 - **Generate code from OpenAPI specs:**
-  - Basic generation: `./bin/dapr-actor-gen examples/multi-actors/openapi.yaml ./output` -- generates interfaces only
-  - With implementation stubs: `./bin/dapr-actor-gen --generate-impl examples/multi-actors/openapi.yaml ./output` -- REQUIRED for compilable code
-  - With example app: `./bin/dapr-actor-gen --generate-example examples/multi-actors/openapi.yaml ./output`
-  - Full generation: `./bin/dapr-actor-gen --generate-impl --generate-example examples/multi-actors/openapi.yaml ./output`
+  - Basic generation: `./bin/dapr-actor-gen -format openapi examples/multi-actors/openapi.yaml ./output` -- generates interfaces only
+  - With implementation stubs: `./bin/dapr-actor-gen -format openapi --generate-impl examples/multi-actors/openapi.yaml ./output` -- REQUIRED for compilable code
+  - With example app: `./bin/dapr-actor-gen -format openapi --generate-example examples/multi-actors/openapi.yaml ./output`
+  - Full generation: `./bin/dapr-actor-gen -format openapi --generate-impl --generate-example examples/multi-actors/openapi.yaml ./output`
   - Code generation is very fast (<1 second)
 
 - **Validate generated code:**
@@ -55,14 +55,14 @@ Always reference these instructions first and fallback to search or bash command
 - **ALWAYS run these validation steps after making changes:**
   - Build the tool: `make build`
   - Run all tests: `make test`
-  - Generate sample code with implementation: `./bin/dapr-actor-gen --generate-impl examples/multi-actors/openapi.yaml ./test-output`
+  - Generate sample code with implementation: `./bin/dapr-actor-gen -format openapi --generate-impl examples/multi-actors/openapi.yaml ./test-output`
   - Verify generated code compiles: `cd ./test-output && go mod init test-module && go mod tidy && go build ./...`
   - Format code: `go fmt ./...`
   - Lint code: `go vet ./...`
 
 - **When generator logic or example OpenAPI specs change:**
   - **Before regenerating:** Remove any existing impl.go files: `find examples/multi-actors/generated -name "impl.go" -delete`
-  - Regenerate example code: `./bin/dapr-actor-gen --generate-impl --generate-example examples/multi-actors/openapi.yaml examples/multi-actors/generated`
+  - Regenerate example code: `./bin/dapr-actor-gen -format openapi --generate-impl --generate-example examples/multi-actors/openapi.yaml examples/multi-actors/generated`
   - **Compare with reference implementations:** For each actor type, compare exported functions between `actor.go` (reference) and `impl.go` (newly generated):
     - `go doc -u ./examples/multi-actors/generated/[actortype]/` to see all exported functions
     - Ensure `actor.go` implements all methods that `impl.go` expects from the API interface

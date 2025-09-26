@@ -1,0 +1,35 @@
+# Simple actor definition for testing basic Actor Schema parsing functionality
+actors:
+  TestActor:
+    description: Simple test actor for validation
+    methods:
+      GetValue:
+        description: Get current value
+        returns: TestState
+      SetValue:
+        description: Set value 
+        request: SetValueRequest
+        returns: TestState
+
+types:
+  TestState:
+    type: object
+    description: Test state object
+    properties:
+      value:
+        type: integer
+        description: Current value
+      lastUpdated:
+        type: string
+        format: date-time
+        description: Timestamp of last update
+    required: [value]
+
+  SetValueRequest:
+    type: object
+    description: Request to set value
+    properties:
+      value:
+        type: integer
+        description: New value to set
+    required: [value]

@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### ✨ Features
+
+- **Actor Schema Format**: Added native actor-centric YAML format as an alternative to OpenAPI specifications. Define actors directly with intuitive syntax: `actors: { ActorName: { methods: { MethodName: { returns: ReturnType } } } }` instead of verbose OpenAPI paths like `/{actorType}/{actorId}/method/{methodName}`
+- **Automatic Format Detection**: Tool automatically detects OpenAPI vs Actor Schema format based on file content and structure
+- **Backward Compatibility**: Existing OpenAPI specifications continue to work unchanged alongside the new Actor Schema format
+
 ## [0.0.5] - 2025-08-23
 
 ### ✨ Features

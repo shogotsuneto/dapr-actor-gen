@@ -4,7 +4,6 @@ import (
 	"flag"
 	"log"
 
-	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/shogotsuneto/dapr-actor-gen/pkg/generator"
 	"github.com/shogotsuneto/dapr-actor-gen/pkg/parser"
 )
@@ -12,12 +11,14 @@ import (
 func main() {
 	var generateImpl = flag.Bool("generate-impl", false, "Generate partial implementation stubs with not-implemented errors")
 	var generateExample = flag.Bool("generate-example", false, "Generate example main.go, go.mod and other files for a complete app")
+	var format = flag.String("format", "actor-schema", "Input format: 'openapi' for OpenAPI 3.0 or 'actor-schema' for Actor Schema")
 	flag.Parse()
 
 	args := flag.Args()
 	if len(args) < 2 {
-		log.Fatal("Usage: generator [flags] <openapi-file> <base-output-dir>\n" +
+		log.Fatal("Usage: generator [flags] <schema-file> <base-output-dir>\n" +
 			"Flags:\n" +
+			"  -format string    Input format: 'openapi' for OpenAPI 3.0 or 'actor-schema' for Actor Schema (default \"actor-schema\")\n" +
 			"  -generate-impl    Generate partial implementation stubs with not-implemented errors\n" +
 			"  -generate-example Generate example main.go, go.mod and other files for a complete app")
 	}
@@ -25,18 +26,16 @@ func main() {
 	schemaFile := args[0]
 	baseOutputDir := args[1]
 
-	// Load OpenAPI spec
-	loader := openapi3.NewLoader()
-	doc, err := loader.LoadFromFile(schemaFile)
+	// Create parser based on specified format
+	p, err := parser.NewParser(*format, schemaFile)
 	if err != nil {
-		log.Fatalf("Failed to load OpenAPI spec: %v", err)
+		log.Fatalf("Failed to create parser: %v", err)
 	}
 
-	// Parse OpenAPI to intermediate model
-	p := parser.NewOpenAPIParser(doc)
+	// Parse schema to intermediate model
 	model, err := p.Parse()
 	if err != nil {
-		log.Fatalf("Failed to parse OpenAPI spec: %v", err)
+		log.Fatalf("Failed to parse schema: %v", err)
 	}
 
 	// Create generation options

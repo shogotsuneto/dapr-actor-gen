@@ -22,10 +22,10 @@ This example demonstrates different actor patterns (state-based vs event-sourced
 2. **Generate code:**
    ```bash
    # Basic generation (interfaces only)
-   ./bin/dapr-actor-gen examples/multi-actors/openapi.yaml ./output
+   ./bin/dapr-actor-gen -format openapi examples/multi-actors/openapi.yaml ./output
    
    # With implementation stubs
-   ./bin/dapr-actor-gen --generate-impl examples/multi-actors/openapi.yaml ./output
+   ./bin/dapr-actor-gen -format openapi --generate-impl examples/multi-actors/openapi.yaml ./output
    ```
 
 3. **Compile generated code:**
