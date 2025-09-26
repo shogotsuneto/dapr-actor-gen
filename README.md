@@ -1,15 +1,17 @@
 # Dapr Actor Code Generator
 
-A standalone code generator for creating Go interfaces, types, and factory functions from OpenAPI 3.0 specifications for Dapr actors.
+A standalone code generator for creating Go interfaces, types, and factory functions from Actor Schema definitions for Dapr actors.
 
 ## Overview
 
-This tool enables schema-first development for Dapr actors by generating Go code from OpenAPI specifications. It creates:
+This tool enables schema-first development for Dapr actors by generating Go code from **Actor Schema** definitions (default) or OpenAPI specifications. It creates:
 
 - **Actor interfaces** with proper Dapr actor method signatures
-- **Type definitions** from OpenAPI schemas
+- **Type definitions** from schema specifications
 - **Factory functions** for actor registration
 - **Complete actor packages** ready for implementation
+
+The tool uses an intuitive **Actor Schema format** by default, which is specifically designed for defining actors rather than REST APIs.
 
 ## Quick Start
 
@@ -19,14 +21,7 @@ This tool enables schema-first development for Dapr actors by generating Go code
 # Pull and use the latest pre-built image
 docker pull ghcr.io/shogotsuneto/dapr-actor-gen:latest
 
-# Generate code from OpenAPI schema
-docker run --rm \
-  -v $(pwd)/examples:/examples \
-  -v $(pwd)/output:/output \
-  ghcr.io/shogotsuneto/dapr-actor-gen:latest \
-  /examples/multi-actors/openapi.yaml /output
-
-# Or generate from Actor Schema format (more intuitive)
+# Generate code from Actor Schema (default format)
 docker run --rm \
   -v $(pwd)/examples:/examples \
   -v $(pwd)/output:/output \
@@ -44,10 +39,7 @@ cd dapr-actor-gen
 # Build the generator binary
 make build
 
-# Use the binary directly to generate from OpenAPI schema
-./bin/dapr-actor-gen -format openapi examples/multi-actors/openapi.yaml ./generated
-
-# Or use the more intuitive Actor Schema format
+# Use the binary to generate from Actor Schema (default format)
 ./bin/dapr-actor-gen examples/multi-actors/actors.yaml ./generated
 ```
 
@@ -172,62 +164,90 @@ make clean
 make tidy
 ```
 
-## Using the Binary Directly
+## Actor Schema Format (Default)
 
-After building with `make build`, the binary will be available at `./bin/dapr-actor-gen`:
-
-```bash
-# Generate code from any OpenAPI schema
-./bin/dapr-actor-gen path/to/schema.yaml ./generated
-
-# Example with the provided sample schema
-./bin/dapr-actor-gen -format openapi examples/multi-actors/openapi.yaml ./generated
-```
-
-## OpenAPI Schema Requirements
-
-Your OpenAPI specification should follow these conventions for Dapr actors:
+The Actor Schema format is the default and most intuitive way to define Dapr actors. It uses a clean, actor-centric YAML structure:
 
 ```yaml
-openapi: 3.0.0
-info:
-  title: My Actors API
-  version: 1.0.0
+actors:
+  Counter:
+    description: Simple state-based counter actor
+    methods:
+      Increment:
+        description: Increment counter by 1
+        returns: CounterState
+      GetValue:
+        description: Get current counter value
+        returns: CounterState
+      SetValue:
+        description: Set counter to specific value
+        request: SetValueRequest
+        returns: CounterState
 
-paths:
-  # Actor methods follow the pattern: /{actorType}/{actorId}/method/{methodName}
-  /Counter/{actorId}/method/Increment:
-    post:
-      summary: Increment counter by 1
-      parameters:
-        - name: actorId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Counter incremented
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CounterState'
+types:
+  CounterState:
+    type: object
+    properties:
+      value:
+        type: integer
+        format: int32
+      status:
+        type: string
+        enum: [active, paused, error]
+    required: [value, status]
 
-components:
-  schemas:
-    CounterState:
-      type: object
-      properties:
-        value:
-          type: integer
+  SetValueRequest:
+    type: object
+    properties:
+      value:
+        type: integer
+        format: int32
+    required: [value]
 ```
 
-Key requirements:
-- Paths must follow the pattern: `/{actorType}/{actorId}/method/{methodName}`
-- Actor type is extracted from the path (e.g., "Counter" from `/Counter/{actorId}/method/Increment`)
-- Actor ID should be a path parameter (typically named `actorId`)
-- Method names are extracted from the path after `/method/`
-- Request/response schemas become Go types
+### Using the Binary
+
+After building with `make build`, generate code using the Actor Schema format (default):
+
+```bash
+# Generate interfaces only
+./bin/dapr-actor-gen examples/multi-actors/actors.yaml ./generated
+
+# Generate with implementation stubs
+./bin/dapr-actor-gen --generate-impl examples/multi-actors/actors.yaml ./generated
+
+# Generate complete example application
+./bin/dapr-actor-gen --generate-impl --generate-example examples/multi-actors/actors.yaml ./generated
+```
+
+### Method Patterns
+
+The Actor Schema format supports different method patterns:
+
+```yaml
+actors:
+  BankAccount:
+    methods:
+      # Query method (no input, returns data)
+      GetBalance:
+        description: Get current account balance
+        returns: BankAccountState
+      
+      # Command method (takes input, returns data)
+      Deposit:
+        description: Deposit money to account
+        request: DepositRequest
+        returns: BankAccountState
+      
+      # Action method (takes input, no return)
+      ProcessPayment:
+        description: Process a payment
+        request: PaymentRequest
+      
+      # Simple action (no input, no return)
+      Reset:
+        description: Reset the account
+```
 
 ## Examples
 
@@ -247,25 +267,26 @@ dapr-actor-gen [flags] <openapi-file> <output-directory>
 - `openapi-file`: Path to your OpenAPI 3.0 specification file (YAML or JSON)
 - `output-directory`: Directory where generated code will be placed
 
-### Options
+### Command Options
 
-- `--generate-impl`: Generate partial implementation stubs with not-implemented errors
+- `--generate-impl`: Generate partial implementation stubs with not-implemented errors  
 - `--generate-example`: Generate example main.go, go.mod and other files for a complete app
+- `-format`: Specify input format ('actor-schema' default, 'openapi' for OpenAPI 3.0)
 
 ### Usage Examples
 
 ```bash
-# Generate interfaces only
-dapr-actor-gen -format openapi openapi.yaml ./output
+# Generate interfaces only (Actor Schema format - default)
+dapr-actor-gen actors.yaml ./output
 
-# Generate interfaces + partial implementations
-dapr-actor-gen -format openapi --generate-impl openapi.yaml ./output
+# Generate interfaces + partial implementations  
+dapr-actor-gen --generate-impl actors.yaml ./output
 
 # Generate interfaces + example application
-dapr-actor-gen -format openapi --generate-example openapi.yaml ./output
+dapr-actor-gen --generate-example actors.yaml ./output
 
 # Generate everything together
-dapr-actor-gen -format openapi --generate-impl --generate-example openapi.yaml ./output
+dapr-actor-gen --generate-impl --generate-example actors.yaml ./output
 ```
 
 #### Partial Implementation Generation (`--generate-impl`)
@@ -288,13 +309,13 @@ When using `--generate-example`:
 
 ## Features
 
-- ✅ **OpenAPI 3.0 Support** - Full support for OpenAPI specifications
-- ✅ **Actor Schema Format** - Native actor-centric YAML format (more intuitive than OpenAPI paths)
-- ✅ **Multiple Actor Types** - Generate multiple actors from one spec
+- ✅ **Actor Schema Format** - Native actor-centric YAML format (default and recommended)
+- ✅ **OpenAPI 3.0 Support** - Alternative support for existing OpenAPI specifications
+- ✅ **Multiple Actor Types** - Generate multiple actors from one specification  
 - ✅ **Type Safety** - Generated types match your schemas exactly
 - ✅ **Dapr Integration** - Ready-to-use with Dapr Go SDK
 - ✅ **Factory Functions** - Automatic registration helpers
-- ✅ **Format Auto-Detection** - Automatically detects OpenAPI vs Actor Schema format
+- ✅ **Explicit Format Selection** - Clean `-format` flag specification (defaults to actor-schema)
 - 🔄 **Future**: Protocol Buffers, JSON Schema, GraphQL support
 
 ## Building from Source
@@ -344,9 +365,9 @@ For local Docker builds:
 # Build Docker image
 docker build -t dapr-actor-gen .
 
-# Run locally built image
+# Run locally built image (using Actor Schema default format)
 docker run --rm -v $(pwd)/examples:/examples -v $(pwd)/output:/output \
-  dapr-actor-gen -format openapi /examples/multi-actors/openapi.yaml /output
+  dapr-actor-gen /examples/multi-actors/actors.yaml /output
 ```
 
 ## Releases
